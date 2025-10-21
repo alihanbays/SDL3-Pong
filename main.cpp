@@ -80,7 +80,6 @@ int main(int argc, char* args[]) {
             }
         }
 
-        // Color it white and add the picture
         uint32_t colorWhite = SDL_MapSurfaceRGB(ScreenSurface, 0xFF, 0xFF, 0xFF);
 
         SDL_FillSurfaceRect(ScreenSurface, nullptr, colorWhite);
