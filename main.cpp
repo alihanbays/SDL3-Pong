@@ -184,37 +184,38 @@ int main(int argc, char* args[]) {
     SDL_Event event;
     SDL_zero(event);
     int direction{0};
-    Texture toRender;
+    Texture *toRender{nullptr};
     while (quit == false) {
         while (SDL_PollEvent(&event) == true) { // If there are events to process
             if (event.type == SDL_EVENT_QUIT) {
                 quit = true;
             }
         }
-        direction = 0;
         direction = moveDirection();
 
         switch (direction)
         {
         case 0:
-            toRender = pngTextures[0];
+            toRender = &pngTextures[0];
             break;
         case 1:
-            toRender = pngTextures[1];
+            toRender = &pngTextures[1];
             break;
         case 2:
-            toRender = pngTextures[2];
+            toRender = &pngTextures[2];
             break;
         case 3:
-            toRender = pngTextures[3];
+            toRender = &pngTextures[3];
             break;
         default:
-            toRender.editTexture(nullptr);
+            toRender = nullptr;
         }
 
         SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(renderer);
-        if (toRender.isLoaded()) toRender.render(0.f, 0.f);
+        if (toRender != nullptr && toRender->isLoaded()) {
+            toRender->render(0.f, 0.f);
+        }
         SDL_RenderPresent(renderer);
     }
 
