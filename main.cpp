@@ -13,6 +13,7 @@ class Texture {
         void render(float x, float y);
         int getHeight();
         int getWidth();
+        void editTexture(SDL_Texture *newTexture);
 
     private:
         SDL_Texture* sdlTexture;
@@ -23,10 +24,8 @@ class Texture {
 constexpr int ScreenWidth {640};
 constexpr int ScreenHeight {480};
 SDL_Window* window {nullptr}; 
-SDL_Surface* screenSurface {nullptr};
 SDL_Renderer* renderer {nullptr};
-SDL_Surface* helloWorld {nullptr};
-Texture pngTexture;
+Texture pngTextures[4];
 
 Texture::Texture():
     sdlTexture{nullptr},
@@ -37,6 +36,10 @@ Texture::Texture():
 
 Texture::~Texture() {
     destroy();
+}
+
+void Texture::editTexture(SDL_Texture *newTexture) {
+    sdlTexture = newTexture;
 }
 
 bool Texture::loadFromFile(std::string path) {
@@ -108,33 +111,56 @@ bool init() {
 bool loadMedia() {
     bool success {true};
 
-    if (pngTexture.loadFromFile("hello-sdl3.bmp") == false) {
+    // if (pngTexture.loadFromFile("hello-sdl3.bmp") == false) {
+    //     SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
+    //     success = false;
+    // }
+    
+    if (pngTextures[0].loadFromFile("pngs/up.png") == false) {
         SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
         success = false;
     }
-    
-    // std::string imagePath {"./hello-sdl3.bmp"};
 
-    // helloWorld = SDL_LoadBMP(imagePath.c_str()) ;
+    if (pngTextures[1].loadFromFile("pngs/down.png") == false) {
+        SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
+        success = false;
+    }
 
-    // if (helloWorld == nullptr) {
-    //     SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
-    // }
+    if (pngTextures[2].loadFromFile("pngs/left.png") == false) {
+        SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
+        success = false;
+    }
+
+    if (pngTextures[3].loadFromFile("pngs/right.png") == false) {
+        SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
+        success = false;
+    }
 
     return success;
 }
 
 void close() {
-    pngTexture.destroy();
-    SDL_DestroySurface(helloWorld);
-    helloWorld = nullptr;
+    for (int i = 0; i < sizeof(pngTextures) / sizeof(pngTextures[0]); i++) {
+        pngTextures[i].destroy();
+    }
+
     SDL_DestroyRenderer(renderer);
     renderer = nullptr;
     SDL_DestroyWindow(window);
     window = nullptr;
-    screenSurface = nullptr;
-
     SDL_Quit();
+}
+
+int moveDirection() {
+    int *numkeys{nullptr};
+    const bool *keystates = SDL_GetKeyboardState(numkeys);
+
+    if (keystates[SDL_SCANCODE_UP]) return 0;
+    if (keystates[SDL_SCANCODE_DOWN]) return 1;
+    if (keystates[SDL_SCANCODE_LEFT]) return 2;
+    if (keystates[SDL_SCANCODE_RIGHT]) return 3;
+
+    return 5;
 }
 
 int main(int argc, char* args[]) {
@@ -157,17 +183,38 @@ int main(int argc, char* args[]) {
     bool quit {false};
     SDL_Event event;
     SDL_zero(event);
-
+    int direction{0};
+    Texture toRender;
     while (quit == false) {
         while (SDL_PollEvent(&event) == true) { // If there are events to process
             if (event.type == SDL_EVENT_QUIT) {
                 quit = true;
             }
         }
+        direction = 0;
+        direction = moveDirection();
+
+        switch (direction)
+        {
+        case 0:
+            toRender = pngTextures[0];
+            break;
+        case 1:
+            toRender = pngTextures[1];
+            break;
+        case 2:
+            toRender = pngTextures[2];
+            break;
+        case 3:
+            toRender = pngTextures[3];
+            break;
+        default:
+            toRender.editTexture(nullptr);
+        }
 
         SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(renderer);
-        pngTexture.render(0.f, 0.f);
+        if (toRender.isLoaded()) toRender.render(0.f, 0.f);
         SDL_RenderPresent(renderer);
     }
 
