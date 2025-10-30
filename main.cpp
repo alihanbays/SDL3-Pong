@@ -27,6 +27,7 @@ SDL_Window* window {nullptr};
 SDL_Renderer* renderer {nullptr};
 Texture pngTextures[4];
 
+
 Texture::Texture():
     sdlTexture{nullptr},
     height{0},
@@ -152,8 +153,7 @@ void close() {
 }
 
 int moveDirection() {
-    int *numkeys{nullptr};
-    const bool *keystates = SDL_GetKeyboardState(numkeys);
+    const bool *keystates = SDL_GetKeyboardState(nullptr);
 
     if (keystates[SDL_SCANCODE_UP]) return 0;
     if (keystates[SDL_SCANCODE_DOWN]) return 1;
@@ -192,29 +192,41 @@ int main(int argc, char* args[]) {
             }
         }
         direction = moveDirection();
-
+        SDL_Color bgColor {0xFF, 0xFF, 0xFF, 0xFF};
         switch (direction)
         {
         case 0:
             toRender = &pngTextures[0];
+            bgColor.r = 0xFF;
+            bgColor.g = 0x00;
+            bgColor.b = 0x00;
             break;
         case 1:
             toRender = &pngTextures[1];
+            bgColor.r = 0x00;
+            bgColor.g = 0xFF;
+            bgColor.b = 0x00;
             break;
         case 2:
             toRender = &pngTextures[2];
+            bgColor.r = 0x00;
+            bgColor.g = 0x00;
+            bgColor.b = 0xFF;
             break;
         case 3:
             toRender = &pngTextures[3];
+            bgColor.r = 0x00;
+            bgColor.g = 0xFF;
+            bgColor.b = 0xFF;
             break;
         default:
             toRender = nullptr;
         }
 
-        SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+        SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
         SDL_RenderClear(renderer);
         if (toRender != nullptr && toRender->isLoaded()) {
-            toRender->render(0.f, 0.f);
+            toRender->render((ScreenWidth - toRender->getWidth()) / 2.f, (ScreenHeight - toRender->getHeight()) / 2.f);
         }
         SDL_RenderPresent(renderer);
     }
