@@ -44,7 +44,6 @@ void Texture::editTexture(SDL_Texture *newTexture) {
 }
 
 bool Texture::loadFromFile(std::string path) {
-      // If already exists
     destroy();
 
     SDL_Surface* surface = IMG_Load(path.c_str());
@@ -111,11 +110,6 @@ bool init() {
 
 bool loadMedia() {
     bool success {true};
-
-    // if (pngTexture.loadFromFile("hello-sdl3.bmp") == false) {
-    //     SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
-    //     success = false;
-    // }
     
     if (pngTextures[0].loadFromFile("pngs/up.png") == false) {
         SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
@@ -186,7 +180,7 @@ int main(int argc, char* args[]) {
     int direction{0};
     Texture *toRender{nullptr};
     while (quit == false) {
-        while (SDL_PollEvent(&event) == true) { // If there are events to process
+        while (SDL_PollEvent(&event) == true) {
             if (event.type == SDL_EVENT_QUIT) {
                 quit = true;
             }
