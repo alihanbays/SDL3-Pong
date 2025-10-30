@@ -42,3 +42,6 @@
 *.DS_Store
 *.vscode/
 *pong
+*pngs/
+*snake
+*snake.c
