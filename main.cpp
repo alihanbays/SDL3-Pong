@@ -13,7 +13,8 @@ class Texture {
         void render(float x, float y);
         int getHeight();
         int getWidth();
-        void editTexture(SDL_Texture *newTexture);
+        int setHeight(int height);
+        int setWidth(int width);
 
     private:
         SDL_Texture* sdlTexture;
@@ -39,10 +40,6 @@ Texture::~Texture() {
     destroy();
 }
 
-void Texture::editTexture(SDL_Texture *newTexture) {
-    sdlTexture = newTexture;
-}
-
 bool Texture::loadFromFile(std::string path) {
     destroy();
 
@@ -52,7 +49,12 @@ bool Texture::loadFromFile(std::string path) {
         SDL_Log("Surface could not be initilized! SDL error: %s\n", SDL_GetError());
         return false;
     }
-
+    //#00FDFF
+    bool trans = SDL_SetSurfaceColorKey(surface, true, SDL_MapSurfaceRGB(surface, 0x00, 0xFF, 0xFF));
+    if (!trans) {
+        SDL_Log("Color key could not be initilized! SDL error: %s\n", SDL_GetError());
+        return false;
+    }
     sdlTexture = SDL_CreateTextureFromSurface(renderer, surface);
 
     if (sdlTexture == nullptr) {
@@ -76,7 +78,7 @@ void Texture::destroy() {
 }
 
 void Texture::render(float x, float y) {
-    SDL_FRect rect{x, y, static_cast<float>(height), static_cast<float>(width)};
+    SDL_FRect rect{x, y, static_cast<float>(width), static_cast<float>(height)};
     SDL_RenderTexture(renderer, sdlTexture, nullptr, &rect);
 }
 
@@ -86,6 +88,14 @@ int Texture::getHeight() {
 
 int Texture::getWidth() {
     return width;
+}
+
+int Texture::setHeight(int newHeight) {
+    return height = newHeight;
+}
+
+int Texture::setWidth(int newWidth) {
+    return width = newWidth;
 }
 
 bool Texture::isLoaded() {
@@ -111,22 +121,32 @@ bool init() {
 bool loadMedia() {
     bool success {true};
     
-    if (pngTextures[0].loadFromFile("pngs/up.png") == false) {
+    // if (pngTextures[0].loadFromFile("pngs/up.png") == false) {
+    //     SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
+    //     success = false;
+    // }
+
+    // if (pngTextures[1].loadFromFile("pngs/down.png") == false) {
+    //     SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
+    //     success = false;
+    // }
+
+    // if (pngTextures[2].loadFromFile("pngs/left.png") == false) {
+    //     SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
+    //     success = false;
+    // }
+
+    // if (pngTextures[3].loadFromFile("pngs/right.png") == false) {
+    //     SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
+    //     success = false;
+    // }
+
+    if (pngTextures[0].loadFromFile("masterpiece.png") == false) {
         SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
         success = false;
     }
 
-    if (pngTextures[1].loadFromFile("pngs/down.png") == false) {
-        SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
-        success = false;
-    }
-
-    if (pngTextures[2].loadFromFile("pngs/left.png") == false) {
-        SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
-        success = false;
-    }
-
-    if (pngTextures[3].loadFromFile("pngs/right.png") == false) {
+    if (pngTextures[1].loadFromFile("man.png") == false) {
         SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
         success = false;
     }
@@ -178,50 +198,54 @@ int main(int argc, char* args[]) {
     SDL_Event event;
     SDL_zero(event);
     int direction{0};
-    Texture *toRender{nullptr};
+    pngTextures[1].setWidth(pngTextures[1].getWidth() / 2.f);
+    pngTextures[1].setHeight(pngTextures[1].getHeight() / 2.f);
+    // Texture *toRender{nullptr};
     while (quit == false) {
         while (SDL_PollEvent(&event) == true) {
             if (event.type == SDL_EVENT_QUIT) {
                 quit = true;
             }
         }
-        direction = moveDirection();
+        // direction = moveDirection();
         SDL_Color bgColor {0xFF, 0xFF, 0xFF, 0xFF};
-        switch (direction)
-        {
-        case 0:
-            toRender = &pngTextures[0];
-            bgColor.r = 0xFF;
-            bgColor.g = 0x00;
-            bgColor.b = 0x00;
-            break;
-        case 1:
-            toRender = &pngTextures[1];
-            bgColor.r = 0x00;
-            bgColor.g = 0xFF;
-            bgColor.b = 0x00;
-            break;
-        case 2:
-            toRender = &pngTextures[2];
-            bgColor.r = 0x00;
-            bgColor.g = 0x00;
-            bgColor.b = 0xFF;
-            break;
-        case 3:
-            toRender = &pngTextures[3];
-            bgColor.r = 0x00;
-            bgColor.g = 0xFF;
-            bgColor.b = 0xFF;
-            break;
-        default:
-            toRender = nullptr;
-        }
+        // switch (direction)
+        // {
+        // case 0:
+        //     toRender = &pngTextures[0];
+        //     bgColor.r = 0xFF;
+        //     bgColor.g = 0x00;
+        //     bgColor.b = 0x00;
+        //     break;
+        // case 1:
+        //     toRender = &pngTextures[1];
+        //     bgColor.r = 0x00;
+        //     bgColor.g = 0xFF;
+        //     bgColor.b = 0x00;
+        //     break;
+        // case 2:
+        //     toRender = &pngTextures[2];
+        //     bgColor.r = 0x00;
+        //     bgColor.g = 0x00;
+        //     bgColor.b = 0xFF;
+        //     break;
+        // case 3:
+        //     toRender = &pngTextures[3];
+        //     bgColor.r = 0x00;
+        //     bgColor.g = 0xFF;
+        //     bgColor.b = 0xFF;
+        //     break;
+        // default:
+        //     toRender = nullptr;
+        // }
 
         SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
         SDL_RenderClear(renderer);
-        if (toRender != nullptr && toRender->isLoaded()) {
-            toRender->render((ScreenWidth - toRender->getWidth()) / 2.f, (ScreenHeight - toRender->getHeight()) / 2.f);
-        }
+        // if (toRender != nullptr && toRender->isLoaded()) {
+        //     toRender->render((ScreenWidth - toRender->getWidth()) / 2.f, (ScreenHeight - toRender->getHeight()) / 2.f);
+        // }
+        pngTextures[0].render(0.f, 0.f);
+        pngTextures[1].render((ScreenWidth - pngTextures[1].getWidth()) / 2.f, (ScreenHeight - pngTextures[1].getHeight()) / 2.f);
         SDL_RenderPresent(renderer);
     }
 
