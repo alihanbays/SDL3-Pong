@@ -9,8 +9,8 @@ class Texture {
         ~Texture();
         bool loadFromFile(const std::string &path);
         void destroy();
+        void render(const SDL_FRect *srcRect, const SDL_FRect *dstRect) const;
         bool isLoaded() const;
-        void render(float x, float y) const;
         int getHeight() const;
         int getWidth() const;
         int setHeight(int newHeight);
@@ -24,7 +24,7 @@ class Texture {
 
 constexpr int ScreenWidth {640};
 constexpr int ScreenHeight {480};
-SDL_Window* window {nullptr}; 
+SDL_Window* window {nullptr};
 SDL_Renderer* renderer {nullptr};
 Texture pngTextures[4];
 constexpr SDL_Color bgColor {0xFF, 0xFF, 0xFF, 0xFF};
@@ -45,7 +45,7 @@ bool Texture::loadFromFile(const std::string &path) {
     destroy();
 
     SDL_Surface* surface = IMG_Load(path.c_str());
-    
+
     if (surface == nullptr) {
         SDL_Log("Surface could not be initialized! SDL error: %s\n", SDL_GetError());
         return false;
@@ -69,7 +69,7 @@ bool Texture::loadFromFile(const std::string &path) {
     SDL_DestroySurface(surface);
 
     return true;
-} 
+}
 
 void Texture::destroy() {
     SDL_DestroyTexture(sdlTexture);
@@ -78,9 +78,8 @@ void Texture::destroy() {
     width = 0;
 }
 
-void Texture::render(const float x, const float y) const {
-    const SDL_FRect rect{x, y, static_cast<float>(width), static_cast<float>(height)};
-    SDL_RenderTexture(renderer, sdlTexture, nullptr, &rect);
+void Texture::render(const SDL_FRect *srcRect, const SDL_FRect *dstRect) const {
+    SDL_RenderTexture(renderer, sdlTexture, srcRect, dstRect);
 }
 
 int Texture::getHeight() const {
@@ -109,7 +108,7 @@ bool init() {
     if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
         SDL_Log("SDL could not be initialized! SDL error: %s\n", SDL_GetError());
         success = false;
-    } 
+    }
 
     if (!SDL_CreateWindowAndRenderer("Pong", ScreenWidth, ScreenHeight, 0, &window, &renderer)) {
         SDL_Log("SDL could not create window and renderer! SDL error: %s\n", SDL_GetError());
@@ -122,12 +121,16 @@ bool init() {
 bool loadMedia() {
     bool success {true};
 
-    if (pngTextures[0].loadFromFile("masterpiece.png") == false) {
-        SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
-        success = false;
-    }
-
-    if (pngTextures[1].loadFromFile("man.png") == false) {
+    // if (pngTextures[0].loadFromFile("masterpiece.png") == false) {
+    //     SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
+    //     success = false;
+    // }
+    //
+    // if (pngTextures[1].loadFromFile("man.png") == false) {
+    //     SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
+    //     success = false;
+    // }
+    if (pngTextures[0].loadFromFile("dots.png") == false) {
         SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
         success = false;
     }
@@ -147,17 +150,6 @@ void close() {
     SDL_Quit();
 }
 
-int moveDirection() {
-    const bool *keyStates = SDL_GetKeyboardState(nullptr);
-
-    if (keyStates[SDL_SCANCODE_UP]) return 0;
-    if (keyStates[SDL_SCANCODE_DOWN]) return 1;
-    if (keyStates[SDL_SCANCODE_LEFT]) return 2;
-    if (keyStates[SDL_SCANCODE_RIGHT]) return 3;
-
-    return 5;
-}
-
 int main(int argc, char* args[]) {
     int exitCode {0};
 
@@ -174,12 +166,12 @@ int main(int argc, char* args[]) {
         close();
         return exitCode;
     }
-    
+
     bool quit {false};
     SDL_Event event;
     SDL_zero(event);
-    pngTextures[1].setWidth(pngTextures[1].getWidth() / 2);
-    pngTextures[1].setHeight(pngTextures[1].getHeight() / 2);
+    SDL_Log( std::to_string(pngTextures[0].getWidth()).c_str());
+    SDL_Log(std::to_string(pngTextures[0].getHeight()).c_str());
 
     while (quit == false) {
         while (SDL_PollEvent(&event) == true) {
@@ -190,9 +182,49 @@ int main(int argc, char* args[]) {
 
         SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
         SDL_RenderClear(renderer);
-        pngTextures[0].render(0.f, 0.f);
-        pngTextures[1].render(static_cast<float>(ScreenWidth - pngTextures[1].getWidth()) / 2.f,
-                              (static_cast<float>(ScreenHeight - pngTextures[1].getHeight())) / 2.f);
+        // Lets try to grab the first red circle
+        const SDL_FRect redCircle{0.f, 0.f, 100, 100};
+        const SDL_FRect greenCircle{0.f, 100.f, 100, 100};
+        const SDL_FRect yellowCircle{100.f, 0.f, 100, 100};
+        const SDL_FRect blueCircle{100.f, 100.f, 100, 100};
+
+        const SDL_FRect dstRect{
+            0.f,
+            0.f,
+            static_cast<float>(pngTextures[0].getWidth()),
+            static_cast<float>(pngTextures[0].getHeight())
+        };
+
+        const SDL_FRect leftTop{
+            0,
+            0,
+            100,
+            100
+        };
+        const SDL_FRect rightTop{
+            ScreenWidth - 50,
+            0,
+            50,
+            100
+        };
+        const SDL_FRect leftBottom{
+            0,
+            ScreenHeight - 100,
+            100,
+            100
+        };
+        const SDL_FRect rightBottom{
+            ScreenWidth - 100,
+            ScreenHeight - 50,
+            100,
+            50
+        };
+
+        pngTextures[0].render(&redCircle, &leftTop);
+        pngTextures[0].render(&greenCircle, &rightTop);
+        pngTextures[0].render(&yellowCircle, &leftBottom);
+        pngTextures[0].render(&blueCircle, &rightBottom);
+
         SDL_RenderPresent(renderer);
     }
 
