@@ -7,14 +7,16 @@ class Texture {
     public:
         Texture();
         ~Texture();
+        static constexpr int originalSize {-1};
         bool loadFromFile(const std::string &path);
         void destroy();
-        void render(const SDL_FRect *srcRect, const SDL_FRect *dstRect) const;
+        void render(float x, float y, const SDL_FRect *clip, float width = originalSize, float height = originalSize) const;
         bool isLoaded() const;
         int getHeight() const;
         int getWidth() const;
         int setHeight(int newHeight);
         int setWidth(int newWidth);
+
 
     private:
         SDL_Texture* sdlTexture;
@@ -78,8 +80,23 @@ void Texture::destroy() {
     width = 0;
 }
 
-void Texture::render(const SDL_FRect *srcRect, const SDL_FRect *dstRect) const {
-    SDL_RenderTexture(renderer, sdlTexture, srcRect, dstRect);
+void Texture::render(const float x, const float y, const SDL_FRect *clip, float newWidth, float newHeight) const {
+
+    // Construct the initial rect
+    SDL_FRect dRect{x, y, static_cast<float>(width),  static_cast<float>(height)};
+
+    if (clip != nullptr) {
+        dRect.w = clip->w;
+        dRect.h = clip->h;
+    }
+
+    if (newWidth > 0) {
+        dRect.w = newWidth;
+    }
+    if (newHeight > 0) {
+        dRect.h = newHeight;
+    }
+    SDL_RenderTexture(renderer, sdlTexture, clip, &dRect);
 }
 
 int Texture::getHeight() const {
@@ -170,8 +187,6 @@ int main(int argc, char* args[]) {
     bool quit {false};
     SDL_Event event;
     SDL_zero(event);
-    SDL_Log( std::to_string(pngTextures[0].getWidth()).c_str());
-    SDL_Log(std::to_string(pngTextures[0].getHeight()).c_str());
 
     while (quit == false) {
         while (SDL_PollEvent(&event) == true) {
@@ -182,48 +197,16 @@ int main(int argc, char* args[]) {
 
         SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
         SDL_RenderClear(renderer);
-        // Lets try to grab the first red circle
-        const SDL_FRect redCircle{0.f, 0.f, 100, 100};
-        const SDL_FRect greenCircle{0.f, 100.f, 100, 100};
-        const SDL_FRect yellowCircle{100.f, 0.f, 100, 100};
-        const SDL_FRect blueCircle{100.f, 100.f, 100, 100};
 
-        const SDL_FRect dstRect{
-            0.f,
-            0.f,
-            static_cast<float>(pngTextures[0].getWidth()),
-            static_cast<float>(pngTextures[0].getHeight())
-        };
+        constexpr SDL_FRect redCircle{0.f, 0.f, 100, 100};
+        constexpr SDL_FRect greenCircle{0.f, 100.f, 100, 100};
+        constexpr SDL_FRect yellowCircle{100.f, 0.f, 100, 100};
+        constexpr SDL_FRect blueCircle{100.f, 100.f, 100, 100};
 
-        const SDL_FRect leftTop{
-            0,
-            0,
-            100,
-            100
-        };
-        const SDL_FRect rightTop{
-            ScreenWidth - 50,
-            0,
-            50,
-            100
-        };
-        const SDL_FRect leftBottom{
-            0,
-            ScreenHeight - 100,
-            100,
-            100
-        };
-        const SDL_FRect rightBottom{
-            ScreenWidth - 100,
-            ScreenHeight - 50,
-            100,
-            50
-        };
-
-        pngTextures[0].render(&redCircle, &leftTop);
-        pngTextures[0].render(&greenCircle, &rightTop);
-        pngTextures[0].render(&yellowCircle, &leftBottom);
-        pngTextures[0].render(&blueCircle, &rightBottom);
+        pngTextures[0].render(redCircle.x, redCircle.y, &redCircle);
+        pngTextures[0].render(ScreenWidth - greenCircle.w, 0.f, &greenCircle); // Is there a way to not bound this to greenCircle width value and not use hard coded value as well
+        pngTextures[0].render(0, ScreenHeight - yellowCircle.h, &yellowCircle);
+        pngTextures[0].render(ScreenWidth - blueCircle.w, ScreenHeight - blueCircle.h, &blueCircle);
 
         SDL_RenderPresent(renderer);
     }
