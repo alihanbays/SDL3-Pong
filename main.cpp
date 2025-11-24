@@ -1,7 +1,9 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3_image/SDL_image.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <string>
+#include <sstream>
 
 class Texture {
     public:
@@ -9,7 +11,8 @@ class Texture {
         ~Texture();
         bool loadFromFile(const std::string &path);
         void destroy();
-        void render(const SDL_FRect *srcRect, const SDL_FRect *dstRect) const;
+        void render(float x, float y, const SDL_FRect *clip, float newWidth, float newHeight) const;
+        bool createTextureFromText(const std::string &text);
         bool isLoaded() const;
         int getHeight() const;
         int getWidth() const;
@@ -26,8 +29,11 @@ constexpr int ScreenWidth {640};
 constexpr int ScreenHeight {480};
 SDL_Window* window {nullptr};
 SDL_Renderer* renderer {nullptr};
-Texture pngTextures[4];
-constexpr SDL_Color bgColor {0xFF, 0xFF, 0xFF, 0xFF};
+Texture myTexture;
+constexpr SDL_Color bgColor {0, 0, 0, 255};
+Uint64 startTime {0};
+std::stringstream timeText;
+TTF_Font *font {nullptr};
 
 
 Texture::Texture():
@@ -78,8 +84,50 @@ void Texture::destroy() {
     width = 0;
 }
 
-void Texture::render(const SDL_FRect *srcRect, const SDL_FRect *dstRect) const {
-    SDL_RenderTexture(renderer, sdlTexture, srcRect, dstRect);
+void Texture::render(const float x, const float y, const SDL_FRect *clip = nullptr, const float newWidth = 0, const float newHeight = 0) const {
+
+    // Construct the initial rect
+    SDL_FRect dRect{x, y, static_cast<float>(width),  static_cast<float>(height)};
+
+    if (clip != nullptr) {
+        dRect.w = clip->w;
+        dRect.h = clip->h;
+    }
+
+    if (newWidth > 0) {
+        dRect.w = newWidth;
+    }
+    if (newHeight > 0) {
+        dRect.h = newHeight;
+    }
+
+    if (sdlTexture == nullptr) {
+        SDL_Log("WTF bro");
+    }
+    SDL_RenderTexture(renderer, sdlTexture, clip, &dRect);
+}
+
+bool Texture::createTextureFromText(const std::string &text) {
+    destroy();
+    SDL_Color white = {255, 255, 255, 255};
+    SDL_Surface *textSurface = TTF_RenderText_Solid(font, text.c_str(), text.size(), white);
+    if (textSurface == nullptr) {
+        SDL_Log("Text surface can not be initialized! SDL error: %s\n", SDL_GetError());
+        return false;
+    }
+
+    sdlTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+
+    if (sdlTexture == nullptr) {
+        SDL_Log("Texture could not be initialized! SDL error: %s\n", SDL_GetError());
+        return false;
+    }
+
+    width = textSurface->w;
+    height = textSurface->h;
+
+    SDL_DestroySurface(textSurface);
+    return true;
 }
 
 int Texture::getHeight() const {
@@ -115,34 +163,27 @@ bool init() {
         success = false;
     }
 
-    return success;
-}
-
-bool loadMedia() {
-    bool success {true};
-
-    // if (pngTextures[0].loadFromFile("masterpiece.png") == false) {
-    //     SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
-    //     success = false;
-    // }
-    //
-    // if (pngTextures[1].loadFromFile("man.png") == false) {
-    //     SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
-    //     success = false;
-    // }
-    if (pngTextures[0].loadFromFile("dots.png") == false) {
-        SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
+    if (!TTF_Init()) {
+        SDL_Log("TTF could not be initialized! SDL error: %s\n", SDL_GetError());
         success = false;
     }
 
     return success;
 }
 
-void close() {
-    for (auto & pngTexture : pngTextures) {
-        pngTexture.destroy();
-    }
+bool loadMedia() {
+    bool success {true};
 
+    std::string fontPath {"./DirektorCondensed.ttf"};
+    font = TTF_OpenFont( fontPath.c_str(), 30 );
+    if (font == nullptr){
+        SDL_Log( "Could not load %s! SDL_ttf Error: %s\n", fontPath.c_str(), SDL_GetError() );
+        success = false;
+    }
+    return success;
+}
+
+void close() {
     SDL_DestroyRenderer(renderer);
     renderer = nullptr;
     SDL_DestroyWindow(window);
@@ -152,79 +193,33 @@ void close() {
 
 int main(int argc, char* args[]) {
     int exitCode {0};
-
     if (init() == false) {
         SDL_Log("Unable to initialize program!\n");
         exitCode = 1;
         close();
         return exitCode;
     }
-
-    if (loadMedia() == false) {
-        SDL_Log("Unable to load media!\n");
-        exitCode = 2;
-        close();
-        return exitCode;
-    }
-
+    loadMedia();
     bool quit {false};
     SDL_Event event;
     SDL_zero(event);
-    SDL_Log( std::to_string(pngTextures[0].getWidth()).c_str());
-    SDL_Log(std::to_string(pngTextures[0].getHeight()).c_str());
-
     while (quit == false) {
         while (SDL_PollEvent(&event) == true) {
             if (event.type == SDL_EVENT_QUIT) {
                 quit = true;
             }
         }
-
         SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
         SDL_RenderClear(renderer);
-        // Lets try to grab the first red circle
-        const SDL_FRect redCircle{0.f, 0.f, 100, 100};
-        const SDL_FRect greenCircle{0.f, 100.f, 100, 100};
-        const SDL_FRect yellowCircle{100.f, 0.f, 100, 100};
-        const SDL_FRect blueCircle{100.f, 100.f, 100, 100};
 
-        const SDL_FRect dstRect{
-            0.f,
-            0.f,
-            static_cast<float>(pngTextures[0].getWidth()),
-            static_cast<float>(pngTextures[0].getHeight())
-        };
-
-        const SDL_FRect leftTop{
-            0,
-            0,
-            100,
-            100
-        };
-        const SDL_FRect rightTop{
-            ScreenWidth - 50,
-            0,
-            50,
-            100
-        };
-        const SDL_FRect leftBottom{
-            0,
-            ScreenHeight - 100,
-            100,
-            100
-        };
-        const SDL_FRect rightBottom{
-            ScreenWidth - 100,
-            ScreenHeight - 50,
-            100,
-            50
-        };
-
-        pngTextures[0].render(&redCircle, &leftTop);
-        pngTextures[0].render(&greenCircle, &rightTop);
-        pngTextures[0].render(&yellowCircle, &leftBottom);
-        pngTextures[0].render(&blueCircle, &rightBottom);
-
+        if (event.type == SDL_EVENT_KEY_DOWN) {
+            if (event.key.key == SDLK_SPACE) {
+                startTime = SDL_GetTicks();
+            }
+        }
+        std::string timePassed  = std::to_string((SDL_GetTicks() - startTime) / 1000);
+        myTexture.createTextureFromText(timePassed);
+        myTexture.render((ScreenWidth - myTexture.getWidth()) / 2.f, (ScreenHeight - myTexture.getHeight()) / 2.f);
         SDL_RenderPresent(renderer);
     }
 
