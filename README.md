@@ -1,3 +1,3 @@
-![alt text](image.png)
+![alt text](Assets/image.png)
 
 Look at this beautiful texture
