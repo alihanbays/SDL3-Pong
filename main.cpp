@@ -8,14 +8,17 @@
 class Box {
     public:
         Box();
-        int boxHeight {20};
-        int boxWidth {20};
+        static constexpr int boxWidth = 20;
+        static constexpr int boxHeight = 20;
         int maxVelocity {5};
-        void move();
+
+        bool checkCollision(SDL_Rect a, SDL_Rect b);
+
+        void move(SDL_Rect collider);
         void render();
         void handleEvent(SDL_Event &event);
     private:
-        SDL_Rect rect;
+        SDL_Rect collisionBox;
         int xVelocity;
         int yVelocity;
 };
@@ -24,17 +27,14 @@ constexpr int ScreenWidth {640};
 constexpr int ScreenHeight {480};
 SDL_Window* window {nullptr};
 SDL_Renderer* renderer {nullptr};
-Box myBox;
 constexpr SDL_Color bgColor {0, 0, 0, 255};
-Uint64 startTime {0};
-std::stringstream timeText;
-TTF_Font *font {nullptr};
 constexpr int capFps = 60;
 
-Box::Box() {
-    SDL_Rect rect { 0, 0, boxWidth, boxHeight};
-    xVelocity = 0;
-    yVelocity = 0;
+Box::Box():
+    collisionBox { 0, 0, boxWidth, boxHeight},
+    xVelocity {0},
+    yVelocity {0}
+{
 }
 
 void Box::handleEvent(SDL_Event &event) {
@@ -58,22 +58,53 @@ void Box::handleEvent(SDL_Event &event) {
     }
 }
 
-void Box::move() {
-    rect.x += xVelocity;
-    rect.y += yVelocity;
+bool Box::checkCollision(SDL_Rect a, SDL_Rect b) {
+    int aXMin { a.x };
+    int aXMax { a.x + a.w };
+    int aYMin { a.y };
+    int aYMax { a.y + a.h };
+    int bXMin { b.x };
+    int bXMax { b.x + b.w };
+    int bYMin { b.y };
+    int bYMax { b.y + b.h };
 
-    if (rect.x < 0) rect.x = 0;
-    if (rect.y < 0) rect.y = 0;
 
-    // 620 + 20 | 460 + 20 = 640, 480
-    if (rect.x + boxHeight > ScreenWidth) rect.x -= maxVelocity;
-    if (rect.y + boxHeight > ScreenHeight) rect.y -= maxVelocity;
+    SDL_Log("Xmin: %d, Xmax: %d, Ymin: %d, Ymax: %d", bXMin, bXMax, bYMin, bYMax);
 
-    SDL_Log("X: %d, Y: %d", rect.x, rect.y);
+    if (aXMax <= bXMin) {
+        return false;
+    }
+
+    if (bXMax <= aXMin) {
+        return false;
+    }
+
+    if (aYMax <= bYMin) {
+        return false;
+    }
+
+    if (bYMax <= aYMin) {
+        return false;
+    }
+
+    return true;
+}
+
+void Box::move(SDL_Rect collider) {
+    collisionBox.x += xVelocity;
+    collisionBox.y += yVelocity;
+
+    if ((collisionBox.x < 0) || collisionBox.x + collisionBox.w > ScreenWidth || checkCollision(collider, collisionBox)) {
+        collisionBox.x -= xVelocity;
+    }
+
+    if (collisionBox.y < 0 || collisionBox.y + collisionBox.h > ScreenHeight || checkCollision(collider, collisionBox)) {
+        collisionBox.y -= yVelocity;
+    }
 }
 
 void Box::render() {
-    SDL_FRect drawRect { static_cast<float>(rect.x), static_cast<float>(rect.y), static_cast<float>(boxWidth), static_cast<float>(boxHeight)};
+    SDL_FRect drawRect { static_cast<float>(collisionBox.x), static_cast<float>(collisionBox.y), static_cast<float>(collisionBox.w), static_cast<float>(collisionBox.h)};
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderRect(renderer, &drawRect);
 }
@@ -91,28 +122,6 @@ bool init() {
         success = false;
     }
 
-    if (!TTF_Init()) {
-        SDL_Log("TTF could not be initialized! SDL error: %s\n", SDL_GetError());
-        success = false;
-    }
-
-    return success;
-}
-
-bool loadMedia() {
-    bool success {true};
-
-    // std::string fontPath {"./DirektorCondensed.ttf"};
-    // font = TTF_OpenFont( fontPath.c_str(), 30 );
-    // if (font == nullptr){
-    //     SDL_Log( "Could not load %s! SDL_ttf Error: %s\n", fontPath.c_str(), SDL_GetError() );
-    //     success = false;
-    // }
-
-    // if (myTexture.loadFromFile("dots.png") == false) {
-    //     SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
-    //     success = false;
-    // }
     return success;
 }
 
@@ -132,10 +141,11 @@ int main(int argc, char* args[]) {
         close();
         return exitCode;
     }
-    loadMedia();
     bool quit {false};
     SDL_Event event;
     SDL_zero(event);
+    Box myBox;
+    SDL_Rect wall { (ScreenWidth - 20) / 2, (ScreenHeight - 20) / 2, 20, 200 };
     while (quit == false) {
         while (SDL_PollEvent(&event) == true) {
             if (event.type == SDL_EVENT_QUIT) {
@@ -143,12 +153,17 @@ int main(int argc, char* args[]) {
             }
             myBox.handleEvent(event);
         }
-        myBox.move();
+        myBox.move(wall);
         SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
         SDL_RenderClear(renderer);
         myBox.render();
-        SDL_RenderPresent(renderer);
 
+        // Render wall
+        SDL_FRect drawWall { static_cast<float>(wall.x), static_cast<float>(wall.y), static_cast<float>(wall.w), static_cast<float>(wall.h)};
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderRect(renderer, &drawWall);
+
+        SDL_RenderPresent(renderer);
         constexpr Uint64 nsPerFrame = 1000000000 / capFps;
         if (const Uint64 frameNs {SDL_GetTicksNS()}; frameNs < nsPerFrame) {
             SDL_Delay(nsPerFrame - frameNs);
