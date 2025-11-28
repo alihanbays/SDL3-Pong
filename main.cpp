@@ -4,7 +4,6 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <string>
 #include <sstream>
-#include <optional>
 
 class Box {
     public:
@@ -12,17 +11,18 @@ class Box {
         ~Box() = default;
         int boxWidth = 20;
         int boxHeight = 20;
-        int maxVelocity {1};
+        int maxVelocity {4};
         bool visible {true};
-        int checkCollision(SDL_Rect a, SDL_Rect b);
+
+        static int checkCollision(const SDL_Rect &a, const SDL_Rect &b);
         void controlPlayer(SDL_Event &event);
-
         void controlPlayer2(SDL_Event &event);
-
         void movePlayer();
-        void move(std::optional<SDL_Rect> collider1, std::optional<SDL_Rect> collider2);
+        void move(SDL_Rect *collider1, SDL_Rect *collider2);
         void render();
-        void handleEvent(SDL_Event &event);
+
+        void reset(int x, int y);
+
         void setSpawnLocation(int x, int y);
         void setSize(int width, int height);
         void serveBall();
@@ -101,40 +101,15 @@ Box::Box():
 {
 }
 
-void Box::handleEvent(SDL_Event &event) {
-    // -Y is up, -X is left
-    if (event.type == SDL_EVENT_KEY_DOWN && event.key.repeat == 0) {
-        switch (event.key.key) {
-            case SDLK_UP: yVelocity -= maxVelocity; break;
-            case SDLK_DOWN: yVelocity += maxVelocity; break;
-            case SDLK_LEFT: xVelocity -= maxVelocity; break;
-            case SDLK_RIGHT: xVelocity += maxVelocity; break;
-            case SDLK_SPACE:
-                yVelocity = maxVelocity;
-                xVelocity = maxVelocity;
-                break;
-        }
-    }
-
-    if (event.type == SDL_EVENT_KEY_UP && event.key.repeat == 0) {
-        switch (event.key.key) {
-            case SDLK_UP: yVelocity += maxVelocity; break;
-            case SDLK_DOWN: yVelocity -= maxVelocity; break;
-            case SDLK_LEFT: xVelocity += maxVelocity; break;
-            case SDLK_RIGHT: xVelocity -= maxVelocity; break;
-        }
-    }
-}
-
-int Box::checkCollision(SDL_Rect a, SDL_Rect b) {
-    int aXMin { a.x };
-    int aXMax { a.x + a.w };
-    int aYMin { a.y };
-    int aYMax { a.y + a.h };
-    int bXMin { b.x };
-    int bXMax { b.x + b.w };
-    int bYMin { b.y };
-    int bYMax { b.y + b.h };
+int Box::checkCollision(const SDL_Rect &a, const SDL_Rect &b) {
+    const int aXMin { a.x };
+    const int aXMax { a.x + a.w };
+    const int aYMin { a.y };
+    const int aYMax { a.y + a.h };
+    const int bXMin { b.x };
+    const int bXMax { b.x + b.w };
+    const int bYMin { b.y };
+    const int bYMax { b.y + b.h };
 
     if (aXMax <= bXMin) {
         return 0;
@@ -152,17 +127,14 @@ int Box::checkCollision(SDL_Rect a, SDL_Rect b) {
         return 0;
     }
 
-    //SDL_Log("Collision detected!");
-    int yOverlap = std::min(aYMax, bYMax) - std::max(aYMin, bYMin);
-    int xOverlap = std::min(aXMax, bXMax) - std::max(aXMin, bXMin);
+    const int yOverlap = std::min(aYMax, bYMax) - std::max(aYMin, bYMin);
+    const int xOverlap = std::min(aXMax, bXMax) - std::max(aXMin, bXMin);
 
     if (xOverlap < yOverlap) {
-        SDL_Log("Collision detected on X axis");
         return 1;
     }
 
     if (yOverlap < xOverlap) {
-        SDL_Log("Collision detected on Y axis");
         return 2;
     }
     return 3;
@@ -173,6 +145,7 @@ void Box::controlPlayer(SDL_Event &event) {
         switch (event.key.key) {
             case SDLK_UP: yVelocity -= maxVelocity; break;
             case SDLK_DOWN: yVelocity += maxVelocity; break;
+            default: break;
         }
     }
 
@@ -180,6 +153,7 @@ void Box::controlPlayer(SDL_Event &event) {
         switch (event.key.key) {
             case SDLK_UP: yVelocity += maxVelocity; break;
             case SDLK_DOWN: yVelocity -= maxVelocity; break;
+            default: break;
         }
     }
 }
@@ -189,6 +163,7 @@ void Box::controlPlayer2(SDL_Event &event) {
         switch (event.key.key) {
             case SDLK_W: yVelocity -= maxVelocity; break;
             case SDLK_S: yVelocity += maxVelocity; break;
+            default: break;
         }
     }
 
@@ -196,6 +171,7 @@ void Box::controlPlayer2(SDL_Event &event) {
         switch (event.key.key) {
             case SDLK_W: yVelocity += maxVelocity; break;
             case SDLK_S: yVelocity -= maxVelocity; break;
+            default: break;
         }
     }
 }
@@ -213,7 +189,7 @@ void Box::movePlayer() {
     }
 }
 
-void Box::move(std::optional<SDL_Rect> collider1 = std::nullopt, std::optional<SDL_Rect> collider2 = std::nullopt) {
+void Box::move(SDL_Rect *collider1 = nullptr, SDL_Rect *collider2 = nullptr) {
     collisionBox.x += xVelocity;
     collisionBox.y += yVelocity;
 
@@ -226,8 +202,8 @@ void Box::move(std::optional<SDL_Rect> collider1 = std::nullopt, std::optional<S
     }
 
     if (collider1|| collider2) {
-        int res = checkCollision(collisionBox, collider1.value());
-        int res2 = checkCollision(collisionBox, collider2.value());
+        const int res = checkCollision(collisionBox, *collider1);
+        const int res2 = checkCollision(collisionBox, *collider2);
 
         if (res == 1) xVelocity = xVelocity * -1;
         else if (res == 2) yVelocity = yVelocity * -1;
@@ -240,8 +216,17 @@ void Box::move(std::optional<SDL_Rect> collider1 = std::nullopt, std::optional<S
 
 void Box::render() {
     SDL_FRect drawRect { static_cast<float>(collisionBox.x), static_cast<float>(collisionBox.y), static_cast<float>(collisionBox.w), static_cast<float>(collisionBox.h)};
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderFillRect(renderer, &drawRect);
+}
+
+void Box::reset(int x, int y) {
+    visible = true;
+    SDL_Delay(1000);
+    score += 1;
+    setVelocity(0,0);
+    setSpawnLocation(x, y);
+    serveBall();
+    SDL_Log("Score: %d", score);
 }
 
 bool init() {
@@ -260,7 +245,7 @@ bool init() {
     return success;
 }
 
-int main(int argc, char* args[]) {
+int main() {
     int exitCode {0};
     if (init() == false) {
         SDL_Log("Unable to initialize program!\n");
@@ -268,16 +253,16 @@ int main(int argc, char* args[]) {
         close();
         return exitCode;
     }
+    constexpr Uint64 nsPerFrame = 1000000000 / capFps;
+    Uint64 lastTicks = SDL_GetTicksNS();
     bool quit {false};
     SDL_Event event;
     SDL_zero(event);
-    Box myBox;
+    Box ball;
 
-    int spawnX = (ScreenWidth - myBox.boxWidth) / 2;
-    int spawnY = (ScreenHeight - myBox.boxHeight) / 2;
-    myBox.setSpawnLocation(spawnX, spawnY);
-    // SDL_Rect wall { (ScreenWidth - 40), (ScreenHeight - 150) / 2, 20, 150 };
-    // SDL_Rect wall2 { 20, (ScreenHeight - 150) / 2, 20, 150 };
+    int spawnX = (ScreenWidth - ball.boxWidth) / 2;
+    int spawnY = (ScreenHeight - ball.boxHeight) / 2;
+    ball.setSpawnLocation(spawnX, spawnY);
 
     Box player1;
     player1.setSize(20, 150);
@@ -289,9 +274,12 @@ int main(int argc, char* args[]) {
     player2.setSpawnLocation((ScreenWidth - 40), (ScreenHeight - 150) / 2);
     SDL_Rect *player2Rect = player2.getCollisionBox();
 
-    //myBox.setMaxVelocity(2);
-    myBox.serveBall();
+    ball.setMaxVelocity(4);
+    ball.serveBall();
     while (quit == false) {
+        const Uint64 frameStart = SDL_GetTicksNS();
+        Uint64 deltaNs    = frameStart - lastTicks;
+        lastTicks         = frameStart;
         while (SDL_PollEvent(&event) == true) {
             if (event.type == SDL_EVENT_QUIT) {
                 quit = true;
@@ -299,28 +287,22 @@ int main(int argc, char* args[]) {
             player1.controlPlayer2(event);
             player2.controlPlayer(event);
         }
-        if (myBox.visible == false) {
-            myBox.visible = true;
-            SDL_Delay(1000);
-            score += 1;
-            myBox.setVelocity(0,0);
-            score += 1;
-            myBox.setSpawnLocation(spawnX, spawnY);
-            myBox.serveBall();
-            SDL_Log("Score: %d", score / 2);
+        if (ball.visible == false) {
+            ball.reset(spawnX, spawnY);
         }
-        myBox.move(*playerRect, *player2Rect);
+        ball.move(playerRect, player2Rect);
         player1.movePlayer();
         player2.movePlayer();
         SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
         SDL_RenderClear(renderer);
-        myBox.render();
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        ball.render();
         player1.render();
         player2.render();
         SDL_RenderPresent(renderer);
-        constexpr Uint64 nsPerFrame = 1000000000 / capFps;
-        if (const Uint64 frameNs {SDL_GetTicksNS()}; frameNs < nsPerFrame) {
-            SDL_Delay(nsPerFrame - frameNs);
+
+        if (const Uint64 frameTime = SDL_GetTicksNS() - frameStart; frameTime < nsPerFrame) {
+            SDL_Delay((nsPerFrame - frameTime) / 1000000);
         }
     }
 
