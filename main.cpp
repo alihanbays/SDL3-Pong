@@ -8,43 +8,144 @@
 class Box {
     public:
         Box();
-        int boxHeight {20};
-        int boxWidth {20};
-        int maxVelocity {5};
-        void move();
+        ~Box() = default;
+        int boxWidth = 20;
+        int boxHeight = 20;
+        int maxVelocity {4};
+        bool visible {true};
+
+        static int checkCollision(const SDL_Rect &a, const SDL_Rect &b);
+        void controlPlayer(SDL_Event &event);
+        void controlPlayer2(SDL_Event &event);
+        void movePlayer();
+        void move(SDL_Rect *collider1, SDL_Rect *collider2);
         void render();
-        void handleEvent(SDL_Event &event);
+
+        void reset(int x, int y);
+
+        void setSpawnLocation(int x, int y);
+        void setSize(int width, int height);
+        void serveBall();
+        SDL_Rect* getCollisionBox();
+        void setMaxVelocity(int maxVelocity);
+        void setVelocity(int newX,  int newY);
     private:
-        SDL_Rect rect;
+        SDL_Rect collisionBox;
         int xVelocity;
         int yVelocity;
 };
+
+void Box::setSpawnLocation(int x, int y) {
+    collisionBox.x = x;
+    collisionBox.y = y;
+}
+
+void Box::setSize(int width, int height) {
+    collisionBox.w = width;
+    collisionBox.h = height;
+}
+
+void Box::serveBall() {
+    switch (rand() % 4) {
+        case 0:
+            yVelocity = maxVelocity;
+            xVelocity = maxVelocity;
+            break;
+        case 1:
+            yVelocity = maxVelocity * -1;
+            xVelocity = maxVelocity * -1;
+            break;
+        case 2:
+            yVelocity = maxVelocity * -1;
+            xVelocity = maxVelocity;
+            break;
+        case 3:
+            yVelocity = maxVelocity;
+            xVelocity = maxVelocity * -1;
+    }
+}
+
+SDL_Rect* Box::getCollisionBox() {
+    return &collisionBox;
+}
+
+void Box::setMaxVelocity(int newVelocity) {
+    maxVelocity = newVelocity;
+}
+
+void Box::setVelocity(int newX, int newY) {
+    xVelocity = newX;
+    yVelocity = newY;
+}
 
 constexpr int ScreenWidth {640};
 constexpr int ScreenHeight {480};
 SDL_Window* window {nullptr};
 SDL_Renderer* renderer {nullptr};
-Box myBox;
 constexpr SDL_Color bgColor {0, 0, 0, 255};
-Uint64 startTime {0};
-std::stringstream timeText;
-TTF_Font *font {nullptr};
 constexpr int capFps = 60;
+int score {0};
 
-Box::Box() {
-    SDL_Rect rect { 0, 0, boxWidth, boxHeight};
-    xVelocity = 0;
-    yVelocity = 0;
+void close() {
+    SDL_DestroyRenderer(renderer);
+    renderer = nullptr;
+    SDL_DestroyWindow(window);
+    window = nullptr;
+    SDL_Quit();
 }
 
-void Box::handleEvent(SDL_Event &event) {
-    // -Y is up, -X is left
+Box::Box():
+    collisionBox { 0, 0, boxWidth, boxHeight},
+    xVelocity {0},
+    yVelocity {0}
+{
+}
+
+int Box::checkCollision(const SDL_Rect &a, const SDL_Rect &b) {
+    const int aXMin { a.x };
+    const int aXMax { a.x + a.w };
+    const int aYMin { a.y };
+    const int aYMax { a.y + a.h };
+    const int bXMin { b.x };
+    const int bXMax { b.x + b.w };
+    const int bYMin { b.y };
+    const int bYMax { b.y + b.h };
+
+    if (aXMax <= bXMin) {
+        return 0;
+    }
+
+    if (bXMax <= aXMin) {
+        return 0;
+    }
+
+    if (aYMax <= bYMin) {
+        return 0;
+    }
+
+    if (bYMax <= aYMin) {
+        return 0;
+    }
+
+    const int yOverlap = std::min(aYMax, bYMax) - std::max(aYMin, bYMin);
+    const int xOverlap = std::min(aXMax, bXMax) - std::max(aXMin, bXMin);
+
+    if (xOverlap < yOverlap) {
+        return 1;
+    }
+
+    if (yOverlap < xOverlap) {
+        return 2;
+    }
+    return 3;
+}
+
+void Box::controlPlayer(SDL_Event &event) {
     if (event.type == SDL_EVENT_KEY_DOWN && event.key.repeat == 0) {
         switch (event.key.key) {
             case SDLK_UP: yVelocity -= maxVelocity; break;
             case SDLK_DOWN: yVelocity += maxVelocity; break;
-            case SDLK_LEFT: xVelocity -= maxVelocity; break;
-            case SDLK_RIGHT: xVelocity += maxVelocity; break;
+            default: break;
         }
     }
 
@@ -52,30 +153,80 @@ void Box::handleEvent(SDL_Event &event) {
         switch (event.key.key) {
             case SDLK_UP: yVelocity += maxVelocity; break;
             case SDLK_DOWN: yVelocity -= maxVelocity; break;
-            case SDLK_LEFT: xVelocity += maxVelocity; break;
-            case SDLK_RIGHT: xVelocity -= maxVelocity; break;
+            default: break;
         }
     }
 }
 
-void Box::move() {
-    rect.x += xVelocity;
-    rect.y += yVelocity;
+void Box::controlPlayer2(SDL_Event &event) {
+    if (event.type == SDL_EVENT_KEY_DOWN && event.key.repeat == 0) {
+        switch (event.key.key) {
+            case SDLK_W: yVelocity -= maxVelocity; break;
+            case SDLK_S: yVelocity += maxVelocity; break;
+            default: break;
+        }
+    }
 
-    if (rect.x < 0) rect.x = 0;
-    if (rect.y < 0) rect.y = 0;
+    if (event.type == SDL_EVENT_KEY_UP && event.key.repeat == 0) {
+        switch (event.key.key) {
+            case SDLK_W: yVelocity += maxVelocity; break;
+            case SDLK_S: yVelocity -= maxVelocity; break;
+            default: break;
+        }
+    }
+}
 
-    // 620 + 20 | 460 + 20 = 640, 480
-    if (rect.x + boxHeight > ScreenWidth) rect.x -= maxVelocity;
-    if (rect.y + boxHeight > ScreenHeight) rect.y -= maxVelocity;
+void Box::movePlayer() {
+    collisionBox.x += xVelocity;
+    collisionBox.y += yVelocity;
 
-    SDL_Log("X: %d, Y: %d", rect.x, rect.y);
+    if ((collisionBox.x < 0) || collisionBox.x + collisionBox.w > ScreenWidth) {
+        collisionBox.x -= xVelocity;
+    }
+
+    if (collisionBox.y < 0 || collisionBox.y + collisionBox.h > ScreenHeight) {
+        collisionBox.y -= yVelocity;
+    }
+}
+
+void Box::move(SDL_Rect *collider1 = nullptr, SDL_Rect *collider2 = nullptr) {
+    collisionBox.x += xVelocity;
+    collisionBox.y += yVelocity;
+
+    if ((collisionBox.x + collisionBox.w < 0) || collisionBox.x > ScreenWidth) {
+        visible = false;
+    }
+
+    if (collisionBox.y < 0 || collisionBox.y + collisionBox.h > ScreenHeight) {
+        yVelocity = yVelocity * -1;
+    }
+
+    if (collider1|| collider2) {
+        const int res = checkCollision(collisionBox, *collider1);
+        const int res2 = checkCollision(collisionBox, *collider2);
+
+        if (res == 1) xVelocity = xVelocity * -1;
+        else if (res == 2) yVelocity = yVelocity * -1;
+
+        if (res2 == 1) xVelocity = xVelocity * -1;
+        else if (res2 == 2) yVelocity = yVelocity * -1;
+    }
+
 }
 
 void Box::render() {
-    SDL_FRect drawRect { static_cast<float>(rect.x), static_cast<float>(rect.y), static_cast<float>(boxWidth), static_cast<float>(boxHeight)};
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderRect(renderer, &drawRect);
+    SDL_FRect drawRect { static_cast<float>(collisionBox.x), static_cast<float>(collisionBox.y), static_cast<float>(collisionBox.w), static_cast<float>(collisionBox.h)};
+    SDL_RenderFillRect(renderer, &drawRect);
+}
+
+void Box::reset(int x, int y) {
+    visible = true;
+    SDL_Delay(1000);
+    score += 1;
+    setVelocity(0,0);
+    setSpawnLocation(x, y);
+    serveBall();
+    SDL_Log("Score: %d", score);
 }
 
 bool init() {
@@ -91,40 +242,10 @@ bool init() {
         success = false;
     }
 
-    if (!TTF_Init()) {
-        SDL_Log("TTF could not be initialized! SDL error: %s\n", SDL_GetError());
-        success = false;
-    }
-
     return success;
 }
 
-bool loadMedia() {
-    bool success {true};
-
-    // std::string fontPath {"./DirektorCondensed.ttf"};
-    // font = TTF_OpenFont( fontPath.c_str(), 30 );
-    // if (font == nullptr){
-    //     SDL_Log( "Could not load %s! SDL_ttf Error: %s\n", fontPath.c_str(), SDL_GetError() );
-    //     success = false;
-    // }
-
-    // if (myTexture.loadFromFile("dots.png") == false) {
-    //     SDL_Log("Unable to load image! SDL error: %s\n", SDL_GetError());
-    //     success = false;
-    // }
-    return success;
-}
-
-void close() {
-    SDL_DestroyRenderer(renderer);
-    renderer = nullptr;
-    SDL_DestroyWindow(window);
-    window = nullptr;
-    SDL_Quit();
-}
-
-int main(int argc, char* args[]) {
+int main() {
     int exitCode {0};
     if (init() == false) {
         SDL_Log("Unable to initialize program!\n");
@@ -132,26 +253,56 @@ int main(int argc, char* args[]) {
         close();
         return exitCode;
     }
-    loadMedia();
+    constexpr Uint64 nsPerFrame = 1000000000 / capFps;
+    Uint64 lastTicks = SDL_GetTicksNS();
     bool quit {false};
     SDL_Event event;
     SDL_zero(event);
+    Box ball;
+
+    int spawnX = (ScreenWidth - ball.boxWidth) / 2;
+    int spawnY = (ScreenHeight - ball.boxHeight) / 2;
+    ball.setSpawnLocation(spawnX, spawnY);
+
+    Box player1;
+    player1.setSize(20, 150);
+    player1.setSpawnLocation(20, (ScreenHeight - 150) / 2);
+    SDL_Rect *playerRect = player1.getCollisionBox();
+
+    Box player2;
+    player2.setSize(20, 150);
+    player2.setSpawnLocation((ScreenWidth - 40), (ScreenHeight - 150) / 2);
+    SDL_Rect *player2Rect = player2.getCollisionBox();
+
+    ball.setMaxVelocity(4);
+    ball.serveBall();
     while (quit == false) {
+        const Uint64 frameStart = SDL_GetTicksNS();
+        Uint64 deltaNs    = frameStart - lastTicks;
+        lastTicks         = frameStart;
         while (SDL_PollEvent(&event) == true) {
             if (event.type == SDL_EVENT_QUIT) {
                 quit = true;
             }
-            myBox.handleEvent(event);
+            player1.controlPlayer2(event);
+            player2.controlPlayer(event);
         }
-        myBox.move();
+        if (ball.visible == false) {
+            ball.reset(spawnX, spawnY);
+        }
+        ball.move(playerRect, player2Rect);
+        player1.movePlayer();
+        player2.movePlayer();
         SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
         SDL_RenderClear(renderer);
-        myBox.render();
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        ball.render();
+        player1.render();
+        player2.render();
         SDL_RenderPresent(renderer);
 
-        constexpr Uint64 nsPerFrame = 1000000000 / capFps;
-        if (const Uint64 frameNs {SDL_GetTicksNS()}; frameNs < nsPerFrame) {
-            SDL_Delay(nsPerFrame - frameNs);
+        if (const Uint64 frameTime = SDL_GetTicksNS() - frameStart; frameTime < nsPerFrame) {
+            SDL_Delay((nsPerFrame - frameTime) / 1000000);
         }
     }
 
