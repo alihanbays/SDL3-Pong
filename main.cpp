@@ -14,7 +14,7 @@ class Box {
         int maxVelocity {4};
         bool visible {true};
 
-        static int checkCollision(const SDL_Rect &a, const SDL_Rect &b);
+        static int checkCollision(SDL_Rect *a, SDL_Rect *b);
         void controlPlayer(SDL_Event &event);
         void controlPlayer2(SDL_Event &event);
         void movePlayer();
@@ -101,15 +101,15 @@ Box::Box():
 {
 }
 
-int Box::checkCollision(const SDL_Rect &a, const SDL_Rect &b) {
-    const int aXMin { a.x };
-    const int aXMax { a.x + a.w };
-    const int aYMin { a.y };
-    const int aYMax { a.y + a.h };
-    const int bXMin { b.x };
-    const int bXMax { b.x + b.w };
-    const int bYMin { b.y };
-    const int bYMax { b.y + b.h };
+int Box::checkCollision(SDL_Rect *a, SDL_Rect *b) {
+    const int aXMin { a->x };
+    const int aXMax { a->x + a->w };
+    const int aYMin { a->y };
+    const int aYMax { a->y + a->h };
+    const int bXMin { b->x };
+    const int bXMax { b->x + b->w };
+    const int bYMin { b->y };
+    const int bYMax { b->y + b->h };
 
     if (aXMax <= bXMin) {
         return 0;
@@ -130,11 +130,27 @@ int Box::checkCollision(const SDL_Rect &a, const SDL_Rect &b) {
     const int yOverlap = std::min(aYMax, bYMax) - std::max(aYMin, bYMin);
     const int xOverlap = std::min(aXMax, bXMax) - std::max(aXMin, bXMin);
 
+    // Resolve collision before returning
     if (xOverlap < yOverlap) {
+        if (aXMax > bXMax) {
+            // the ball is on the left
+            SDL_Log("Ball on the Right");
+            a->x += xOverlap;
+        } else {
+            SDL_Log("Ball on the Left");
+            a->x -= xOverlap;
+        }
         return 1;
     }
 
     if (yOverlap < xOverlap) {
+        if (aYMax < bYMax) {
+            SDL_Log("Ball on the Top");
+            a->y -= yOverlap;
+        } else {
+            a->y += yOverlap;
+            SDL_Log("Ball on the Bottom");
+        }
         return 2;
     }
     return 3;
@@ -189,10 +205,7 @@ void Box::movePlayer() {
     }
 }
 
-void Box::move(SDL_Rect *collider1 = nullptr, SDL_Rect *collider2 = nullptr) {
-    collisionBox.x += xVelocity;
-    collisionBox.y += yVelocity;
-
+void Box::move(SDL_Rect *collider1, SDL_Rect *collider2) {
     if ((collisionBox.x + collisionBox.w < 0) || collisionBox.x > ScreenWidth) {
         visible = false;
     }
@@ -201,17 +214,18 @@ void Box::move(SDL_Rect *collider1 = nullptr, SDL_Rect *collider2 = nullptr) {
         yVelocity = yVelocity * -1;
     }
 
-    if (collider1|| collider2) {
-        const int res = checkCollision(collisionBox, *collider1);
-        const int res2 = checkCollision(collisionBox, *collider2);
+    const int res = checkCollision(&collisionBox, collider1);
+    const int res2 = checkCollision(&collisionBox, collider2);
 
-        if (res == 1) xVelocity = xVelocity * -1;
-        else if (res == 2) yVelocity = yVelocity * -1;
+    if (res == 1) xVelocity = xVelocity * -1;
+    else if (res == 2) yVelocity = yVelocity * -1;
 
-        if (res2 == 1) xVelocity = xVelocity * -1;
-        else if (res2 == 2) yVelocity = yVelocity * -1;
-    }
+    if (res2 == 1) xVelocity = xVelocity * -1;
+    else if (res2 == 2) yVelocity = yVelocity * -1;
 
+
+    collisionBox.x += xVelocity;
+    collisionBox.y += yVelocity;
 }
 
 void Box::render() {
