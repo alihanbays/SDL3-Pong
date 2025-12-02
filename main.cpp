@@ -85,6 +85,7 @@ SDL_Renderer* renderer {nullptr};
 constexpr SDL_Color bgColor {0, 0, 0, 255};
 constexpr int capFps = 60;
 int score {0};
+int hitScale {0};
 
 void close() {
     SDL_DestroyRenderer(renderer);
@@ -102,6 +103,7 @@ Box::Box():
 }
 
 int Box::checkCollision(SDL_Rect *a, SDL_Rect *b) {
+    // a is the ball, b is the paddles
     const int aXMin { a->x };
     const int aXMax { a->x + a->w };
     const int aYMin { a->y };
@@ -110,6 +112,11 @@ int Box::checkCollision(SDL_Rect *a, SDL_Rect *b) {
     const int bXMax { b->x + b->w };
     const int bYMin { b->y };
     const int bYMax { b->y + b->h };
+
+    //SDL_Log("Paddle Y center: %i", bYMax - 76);
+    //SDL_Log("Ball Y center: %i", aYMax - 11);
+
+
 
     if (aXMax <= bXMin) {
         return 0;
@@ -130,14 +137,14 @@ int Box::checkCollision(SDL_Rect *a, SDL_Rect *b) {
     const int yOverlap = std::min(aYMax, bYMax) - std::max(aYMin, bYMin);
     const int xOverlap = std::min(aXMax, bXMax) - std::max(aXMin, bXMin);
 
-    // Resolve collision before returning
     if (xOverlap < yOverlap) {
         if (aXMax > bXMax) {
             // the ball is on the left
-            SDL_Log("Ball on the Right");
+            hitScale = (bYMax - 76) - (aYMax - 11);
             a->x += xOverlap;
         } else {
-            SDL_Log("Ball on the Left");
+            // the ball is on the right
+            hitScale = (bYMax - 76) - (aYMax - 11);
             a->x -= xOverlap;
         }
         return 1;
@@ -145,11 +152,9 @@ int Box::checkCollision(SDL_Rect *a, SDL_Rect *b) {
 
     if (yOverlap < xOverlap) {
         if (aYMax < bYMax) {
-            SDL_Log("Ball on the Top");
             a->y -= yOverlap;
         } else {
             a->y += yOverlap;
-            SDL_Log("Ball on the Bottom");
         }
         return 2;
     }
@@ -217,13 +222,31 @@ void Box::move(SDL_Rect *collider1, SDL_Rect *collider2) {
     const int res = checkCollision(&collisionBox, collider1);
     const int res2 = checkCollision(&collisionBox, collider2);
 
-    if (res == 1) xVelocity = xVelocity * -1;
+    if (res == 1) {
+        xVelocity = xVelocity * -1;
+        int scaled = abs(hitScale) / 19; // scale from -76..76 to -4..4
+        if (yVelocity < 0) {
+            scaled *= -1;
+        }
+        int newX = xVelocity + 1;
+        if (newX > 10) newX = 10;
+        setVelocity(newX, scaled);
+    }
     else if (res == 2) yVelocity = yVelocity * -1;
 
-    if (res2 == 1) xVelocity = xVelocity * -1;
+    if (res2 == 1) {
+        xVelocity = xVelocity * -1;
+        int scaled = abs(hitScale) / 19; // scale from -76..76 to -4..4
+        if (yVelocity < 0) {
+            scaled *= -1;
+        }
+        int newX = xVelocity - 1;
+        if (newX < -10) newX = -10;
+        setVelocity(newX, scaled);
+    }
     else if (res2 == 2) yVelocity = yVelocity * -1;
 
-
+    SDL_Log("xVelocity: %i", xVelocity);
     collisionBox.x += xVelocity;
     collisionBox.y += yVelocity;
 }
@@ -235,12 +258,11 @@ void Box::render() {
 
 void Box::reset(int x, int y) {
     visible = true;
-    SDL_Delay(1000);
+    //SDL_Delay(1000);
     score += 1;
     setVelocity(0,0);
     setSpawnLocation(x, y);
     serveBall();
-    SDL_Log("Score: %d", score);
 }
 
 bool init() {
