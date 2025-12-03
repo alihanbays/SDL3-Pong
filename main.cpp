@@ -4,7 +4,19 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <string>
 #include <sstream>
-
+class Texture {
+    public:
+        Texture();
+        ~Texture() = default;
+        bool generateScoreTexture();
+        void render(float x, float y);
+        int getHeight();
+        int getWidth();
+    private:
+        SDL_Texture* texture;
+        int width;
+        int height;
+};
 class Box {
     public:
         Box();
@@ -20,9 +32,7 @@ class Box {
         void movePlayer();
         void move(SDL_Rect *collider1, SDL_Rect *collider2);
         void render();
-
         void reset(int x, int y);
-
         void setSpawnLocation(int x, int y);
         void setSize(int width, int height);
         void serveBall();
@@ -86,6 +96,8 @@ constexpr SDL_Color bgColor {0, 0, 0, 255};
 constexpr int capFps = 60;
 int score {0};
 int hitScale {0};
+TTF_Font* Font;
+Texture scoreTexture;
 
 void close() {
     SDL_DestroyRenderer(renderer);
@@ -112,11 +124,6 @@ int Box::checkCollision(SDL_Rect *a, SDL_Rect *b) {
     const int bXMax { b->x + b->w };
     const int bYMin { b->y };
     const int bYMax { b->y + b->h };
-
-    //SDL_Log("Paddle Y center: %i", bYMax - 76);
-    //SDL_Log("Ball Y center: %i", aYMax - 11);
-
-
 
     if (aXMax <= bXMin) {
         return 0;
@@ -246,7 +253,6 @@ void Box::move(SDL_Rect *collider1, SDL_Rect *collider2) {
     }
     else if (res2 == 2) yVelocity = yVelocity * -1;
 
-    SDL_Log("xVelocity: %i", xVelocity);
     collisionBox.x += xVelocity;
     collisionBox.y += yVelocity;
 }
@@ -258,11 +264,66 @@ void Box::render() {
 
 void Box::reset(int x, int y) {
     visible = true;
-    //SDL_Delay(1000);
+    SDL_Delay(1000);
     score += 1;
     setVelocity(0,0);
     setSpawnLocation(x, y);
     serveBall();
+}
+
+Texture::Texture():
+    texture {nullptr},
+    width {0},
+    height {0}
+{
+}
+
+bool Texture::generateScoreTexture() {
+    std::string fontPath{ "Assets/font.ttf" };
+    Font = TTF_OpenFont( fontPath.c_str(), 28 );
+
+    if (Font == nullptr) {
+        SDL_Log("generateScoreTexture: Font is null");
+        return false;
+    }
+
+    SDL_Color textColor = { 255, 255, 255, 255 };
+    std::string scoreText = std::to_string(score);
+    SDL_Surface *surface = TTF_RenderText_Blended(Font ,scoreText.c_str(), scoreText.size(), textColor);
+
+    if (surface == nullptr) {
+        SDL_Log("generateScoreTexture: surface is null");
+        return false;
+    }
+
+    texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+    if (texture == nullptr) {
+        SDL_Log("generateScoreTexture: texture null");
+        return false;
+    }
+
+    width = surface->w;
+    height = surface->h;
+
+    SDL_DestroySurface(surface);
+    return texture != nullptr;
+}
+
+void Texture::render(float x, float y) {
+    //Set texture position
+    SDL_FRect dstRect{ x, y, static_cast<float>( width ), static_cast<float>( height ) };
+
+    //Render texture
+    SDL_RenderTexture( renderer, scoreTexture.texture, nullptr, &dstRect );
+}
+
+int Texture::getHeight() {
+    return height;
+}
+
+int Texture::getWidth() {
+    return width;
 }
 
 bool init() {
@@ -278,6 +339,11 @@ bool init() {
         success = false;
     }
 
+    if(!TTF_Init())
+    {
+        SDL_Log( "SDL_ttf could not initialize! SDL_ttf error: %s\n", SDL_GetError() );
+        success = false;
+    }
     return success;
 }
 
@@ -326,12 +392,18 @@ int main() {
         if (ball.visible == false) {
             ball.reset(spawnX, spawnY);
         }
+        // load the score
+        if (!scoreTexture.generateScoreTexture()) {
+            SDL_Log("Failed to create texture");
+        }
+
         ball.move(playerRect, player2Rect);
         player1.movePlayer();
         player2.movePlayer();
         SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
         SDL_RenderClear(renderer);
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        scoreTexture.render((ScreenWidth - scoreTexture.getWidth()) / 2.f, scoreTexture.getHeight());
         ball.render();
         player1.render();
         player2.render();

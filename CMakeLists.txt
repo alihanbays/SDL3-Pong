@@ -8,7 +8,8 @@ find_package(SDL3_image REQUIRED CONFIG)
 find_package(SDL3_ttf REQUIRED CONFIG)
 
 add_executable(SDL_Games
-        main.cpp)
+        main.cpp
+        Box.h)
 
 target_link_libraries(SDL_Games PRIVATE SDL3::SDL3 SDL3_image::SDL3_image SDL3_ttf::SDL3_ttf)
 set(CMAKE_BUILD_RPATH "/opt/homebrew/lib")
