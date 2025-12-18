@@ -46,3 +46,4 @@
 *snake
 *snake.c
 *.idea/
+*build/
