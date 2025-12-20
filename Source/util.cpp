@@ -2,6 +2,7 @@
 #include "../Headers/globals.h"
 #include "../Headers/constants.h"
 #include <SDL3/SDL.h>
+#include <string>
 
 
 void close() {
@@ -29,6 +30,21 @@ bool init() {
         SDL_Log( "SDL_ttf could not initialize! SDL_ttf error: %s\n", SDL_GetError() );
         success = false;
     }
+    
+    // Initilize Font
+    std::string fontPath{ "../Assets/font.ttf" };
+    Font = TTF_OpenFont( fontPath.c_str(), 28 );
+
+    if (Font == nullptr) {
+        SDL_Log("generateScoreTexture: Font is null");
+        return false;
+    }
+
+    // Initilize Scoreboard
+    scoreTextures[0].generateScoreTexture(std::to_string(score[0]));
+    scoreTextures[1].generateScoreTexture(std::to_string(score[1]));
+    scoreTextures[2].generateScoreTexture(":");
+
 
     return success;
 }

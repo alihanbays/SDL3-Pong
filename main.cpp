@@ -25,6 +25,7 @@ int main() {
     SDL_zero(event);
     Box ball;
 
+    // Spawn Logic
     int spawnX = (ScreenWidth - ball.boxWidth) / 2;
     int spawnY = (ScreenHeight - ball.boxHeight) / 2;
     ball.setSpawnLocation(spawnX, spawnY);
@@ -41,37 +42,48 @@ int main() {
 
     ball.setMaxVelocity(4);
     ball.serveBall();
+
     while (quit == false) {
         const Uint64 frameStart = SDL_GetTicksNS();
-        Uint64 deltaNs    = frameStart - lastTicks;
-        lastTicks         = frameStart;
+        Uint64 deltaNs = frameStart - lastTicks;
+        lastTicks = frameStart;
         while (SDL_PollEvent(&event) == true) {
             if (event.type == SDL_EVENT_QUIT) {
                 quit = true;
             }
+            // Player controls
             player1.controlPlayer2(event);
             player2.controlPlayer(event);
         }
         if (ball.visible == false) {
             ball.reset(spawnX, spawnY);
         }
+    ;
+    
         // load the score
-        if (!scoreTexture.generateScoreTexture()) {
+        if (!scoreTextures[0].generateScoreTexture(std::to_string(score[0])) || !scoreTextures[1].generateScoreTexture(std::to_string(score[1]))) {
             SDL_Log("Failed to create texture");
         }
 
+        // Move logic
         ball.move(playerRect, player2Rect);
         player1.movePlayer();
         player2.movePlayer();
+
+        // Render Logic
         SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
         SDL_RenderClear(renderer);
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        scoreTexture.render((ScreenWidth - scoreTexture.getWidth()) / 2.f, scoreTexture.getHeight());
+        float middle = (ScreenWidth - scoreTextures[2].getWidth()) / 2.f;
+        scoreTextures[0].render(middle - 25.f, scoreTextures[2].getHeight());
+        scoreTextures[1].render(middle + 30.f, scoreTextures[2].getHeight());
+        scoreTextures[2].render(middle, scoreTextures[2].getHeight());
         ball.render();
         player1.render();
         player2.render();
         SDL_RenderPresent(renderer);
 
+        // Frame cap
         if (const Uint64 frameTime = SDL_GetTicksNS() - frameStart; frameTime < nsPerFrame) {
             SDL_Delay((nsPerFrame - frameTime) / 1000000);
         }

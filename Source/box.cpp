@@ -85,11 +85,9 @@ int Box::checkCollision(SDL_Rect *a, SDL_Rect *b) {
     if (xOverlap < yOverlap) {
         if (aXMax > bXMax) {
             // the ball is on the left
-            hitScale = (bYMax - 76) - (aYMax - 11);
             a->x += xOverlap;
         } else {
             // the ball is on the right
-            hitScale = (bYMax - 76) - (aYMax - 11);
             a->x -= xOverlap;
         }
         return 1;
@@ -103,6 +101,7 @@ int Box::checkCollision(SDL_Rect *a, SDL_Rect *b) {
         }
         return 2;
     }
+    
     return 3;
 }
 
@@ -169,25 +168,25 @@ void Box::move(SDL_Rect *collider1, SDL_Rect *collider2) {
 
     if (res == 1) {
         xVelocity = xVelocity * -1;
-        int scaled = abs(hitScale) / 19; // scale from -76..76 to -4..4
-        if (yVelocity < 0) {
-            scaled *= -1;
-        }
+        // int scaled = abs(hitScale) / 19; // scale from -76..76 to -4..4
+        // if (yVelocity < 0) {
+        //     scaled *= -1;
+        // }
         int newX = xVelocity + 1;
         if (newX > 10) newX = 10;
-        setVelocity(newX, scaled);
+        setVelocity(newX, yVelocity);
     }
     else if (res == 2) yVelocity = yVelocity * -1;
 
     if (res2 == 1) {
         xVelocity = xVelocity * -1;
-        int scaled = abs(hitScale) / 19; // scale from -76..76 to -4..4
-        if (yVelocity < 0) {
-            scaled *= -1;
-        }
+        // int scaled = abs(hitScale) / 19; // scale from -76..76 to -4..4
+        // if (yVelocity < 0) {
+        //     scaled *= -1;
+        // }
         int newX = xVelocity - 1;
         if (newX < -10) newX = -10;
-        setVelocity(newX, scaled);
+        setVelocity(newX, yVelocity);
     }
     else if (res2 == 2) yVelocity = yVelocity * -1;
 
@@ -200,10 +199,18 @@ void Box::render() {
     SDL_RenderFillRect(renderer, &drawRect);
 }
 
+void Box::setScore() {
+    if (collisionBox.x  < 0) {
+        score[1] += 1;
+    } else if (collisionBox.x + collisionBox.w > ScreenWidth) {
+        score[0] += 1;
+    }
+}
+
 void Box::reset(int x, int y) {
     visible = true;
     SDL_Delay(1000);
-    score += 1;
+    setScore();
     setVelocity(0,0);
     setSpawnLocation(x, y);
     serveBall();
