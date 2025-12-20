@@ -10,18 +10,10 @@ Texture::Texture():
 {
 }
 
-bool Texture::generateScoreTexture() {
-    std::string fontPath{ "../Assets/font.ttf" };
-    Font = TTF_OpenFont( fontPath.c_str(), 28 );
-
-    if (Font == nullptr) {
-        SDL_Log("generateScoreTexture: Font is null");
-        return false;
-    }
-
+bool Texture::generateScoreTexture(std::string printScore) {
     SDL_Color textColor = { 255, 255, 255, 255 };
-    std::string scoreText = std::to_string(score);
-    SDL_Surface *surface = TTF_RenderText_Blended(Font ,scoreText.c_str(), scoreText.size(), textColor);
+    std::string scoreText = printScore;
+    SDL_Surface *surface = TTF_RenderText_Blended(Font, scoreText.c_str(), scoreText.size(), textColor);
 
     if (surface == nullptr) {
         SDL_Log("generateScoreTexture: surface is null");
@@ -47,7 +39,7 @@ void Texture::render(float x, float y) {
     SDL_FRect dstRect{ x, y, static_cast<float>( width ), static_cast<float>( height ) };
 
     //Render texture
-    SDL_RenderTexture(renderer, scoreTexture.texture, nullptr, &dstRect );
+    SDL_RenderTexture(renderer, this->texture, nullptr, &dstRect );
 }
 
 int Texture::getHeight() {

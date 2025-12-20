@@ -26,6 +26,7 @@ class Box {
         SDL_Rect* getCollisionBox();
         void setMaxVelocity(int maxVelocity);
         void setVelocity(int newX,  int newY);
+        void setScore();
     private:
         SDL_Rect collisionBox;
         int xVelocity;

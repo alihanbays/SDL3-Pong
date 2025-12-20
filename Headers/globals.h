@@ -6,9 +6,9 @@
 
 extern SDL_Window* window;
 extern SDL_Renderer* renderer;
-extern int score;
-extern int hitScale;
+extern int score[];
+// extern int hitScale;
 extern TTF_Font* Font;
-extern Texture scoreTexture;
+extern Texture scoreTextures[];
 
 #endif

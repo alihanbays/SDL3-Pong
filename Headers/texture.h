@@ -2,12 +2,13 @@
 #define TEXTURE_H
 
 #include <SDL3/SDL.h>
+#include <string>
 
 class Texture {
     public:
         Texture();
         ~Texture() = default;
-        bool generateScoreTexture();
+        bool generateScoreTexture(std::string printScore);
         void render(float x, float y);
         int getHeight();
         int getWidth();
