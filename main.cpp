@@ -31,12 +31,12 @@ int main() {
     ball.setSpawnLocation(spawnX, spawnY);
 
     Box player1;
-    player1.setSize(20, 150);
+    player1.setSize(20, 120);
     player1.setSpawnLocation(20, (ScreenHeight - 150) / 2);
     SDL_Rect *playerRect = player1.getCollisionBox();
 
     Box player2;
-    player2.setSize(20, 150);
+    player2.setSize(20, 120);
     player2.setSpawnLocation((ScreenWidth - 40), (ScreenHeight - 150) / 2);
     SDL_Rect *player2Rect = player2.getCollisionBox();
 

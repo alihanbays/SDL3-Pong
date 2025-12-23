@@ -108,16 +108,16 @@ int Box::checkCollision(SDL_Rect *a, SDL_Rect *b) {
 void Box::controlPlayer(SDL_Event &event) {
     if (event.type == SDL_EVENT_KEY_DOWN && event.key.repeat == 0) {
         switch (event.key.key) {
-            case SDLK_UP: yVelocity -= maxVelocity; break;
-            case SDLK_DOWN: yVelocity += maxVelocity; break;
+            case SDLK_UP: yVelocity -= playerSpeed; break;
+            case SDLK_DOWN: yVelocity += playerSpeed; break;
             default: break;
         }
     }
 
     if (event.type == SDL_EVENT_KEY_UP && event.key.repeat == 0) {
         switch (event.key.key) {
-            case SDLK_UP: yVelocity += maxVelocity; break;
-            case SDLK_DOWN: yVelocity -= maxVelocity; break;
+            case SDLK_UP: yVelocity += playerSpeed; break;
+            case SDLK_DOWN: yVelocity -= playerSpeed; break;
             default: break;
         }
     }
@@ -126,16 +126,16 @@ void Box::controlPlayer(SDL_Event &event) {
 void Box::controlPlayer2(SDL_Event &event) {
     if (event.type == SDL_EVENT_KEY_DOWN && event.key.repeat == 0) {
         switch (event.key.key) {
-            case SDLK_W: yVelocity -= maxVelocity; break;
-            case SDLK_S: yVelocity += maxVelocity; break;
+            case SDLK_W: yVelocity -= playerSpeed; break;
+            case SDLK_S: yVelocity += playerSpeed; break;
             default: break;
         }
     }
 
     if (event.type == SDL_EVENT_KEY_UP && event.key.repeat == 0) {
         switch (event.key.key) {
-            case SDLK_W: yVelocity += maxVelocity; break;
-            case SDLK_S: yVelocity -= maxVelocity; break;
+            case SDLK_W: yVelocity += playerSpeed; break;
+            case SDLK_S: yVelocity -= playerSpeed; break;
             default: break;
         }
     }

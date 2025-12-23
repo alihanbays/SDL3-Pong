@@ -11,6 +11,7 @@ class Box {
         int boxWidth = 20;
         int boxHeight = 20;
         int maxVelocity {4};
+        int playerSpeed {6};
         bool visible {true};
 
         static int checkCollision(SDL_Rect *a, SDL_Rect *b);
