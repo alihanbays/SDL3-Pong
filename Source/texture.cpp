@@ -1,6 +1,7 @@
 #include "../Headers/texture.h"
 #include "../Headers/globals.h"
 #include <SDL3_ttf/SDL_ttf.h>
+#include <SDL3_image/SDL_image.h>
 #include <string>
 
 Texture::Texture():
@@ -10,20 +11,31 @@ Texture::Texture():
 {
 }
 
-bool Texture::generateScoreTexture(std::string printScore) {
+Texture::~Texture() {
+    destroy();
+}
+
+void Texture::destroy() {
+    SDL_DestroyTexture(texture);
+    texture = nullptr;
+    width = 0;
+    height = 0;
+}
+
+bool Texture::loadFromRenderedText(std::string printScore) {
+    destroy();
     SDL_Color textColor = { 255, 255, 255, 255 };
-    std::string scoreText = printScore;
-    SDL_Surface *surface = TTF_RenderText_Blended(Font, scoreText.c_str(), scoreText.size(), textColor);
+    SDL_Surface *surface = TTF_RenderText_Blended(Font, printScore.c_str(), printScore.size(), textColor);
 
     if (surface == nullptr) {
-        SDL_Log("generateScoreTexture: surface is null");
+        SDL_Log("loadFromRenderedText: surface is null");
         return false;
     }
 
     texture = SDL_CreateTextureFromSurface(renderer, surface);
 
     if (texture == nullptr) {
-        SDL_Log("generateScoreTexture: texture null");
+        SDL_Log("loadFromRenderedText: texture null");
         return false;
     }
 

@@ -7,6 +7,9 @@
 #include "Headers/globals.h"
 #include "Headers/constants.h"
 #include "Headers/util.h"
+#include "Headers/introState.h"
+#include "Headers/pongState.h"
+#include "Headers/exitState.h"
 #include <string>
 #include <sstream>
 
@@ -18,74 +21,51 @@ int main() {
         close();
         return exitCode;
     }
-    constexpr Uint64 nsPerFrame = 1000000000 / ScreenFps;
-    Uint64 lastTicks = SDL_GetTicksNS();
-    bool quit {false};
+
+    uint64_t frameStart;
+    uint64_t frameEnd;
+    uint64_t frameTime;
     SDL_Event event;
     SDL_zero(event);
-    Box ball;
 
-    // Spawn Logic
-    int spawnX = (ScreenWidth - ball.boxWidth) / 2;
-    int spawnY = (ScreenHeight - ball.boxHeight) / 2;
-    ball.setSpawnLocation(spawnX, spawnY);
+    currentState = IntroState::get();
+    if (currentState->enter() == false) {
+        currentState->exit();
+        currentState = ExitState::get();
+    }
 
-    Box player1;
-    player1.setSize(20, 120);
-    player1.setSpawnLocation(20, (ScreenHeight - 150) / 2);
-    SDL_Rect *playerRect = player1.getCollisionBox();
+    while (running) {
+        frameStart = SDL_GetTicksNS();
 
-    Box player2;
-    player2.setSize(20, 120);
-    player2.setSpawnLocation((ScreenWidth - 40), (ScreenHeight - 150) / 2);
-    SDL_Rect *player2Rect = player2.getCollisionBox();
-
-    ball.setMaxVelocity(4);
-    ball.serveBall();
-
-    while (quit == false) {
-        const Uint64 frameStart = SDL_GetTicksNS();
-        Uint64 deltaNs = frameStart - lastTicks;
-        lastTicks = frameStart;
         while (SDL_PollEvent(&event) == true) {
+
+            currentState->handleEvent(event);
+
             if (event.type == SDL_EVENT_QUIT) {
-                quit = true;
+                setNextState(ExitState::get());
             }
-            // Player controls
-            player1.controlPlayer2(event);
-            player2.controlPlayer(event);
-        }
-        if (ball.visible == false) {
-            ball.reset(spawnX, spawnY);
-        }
-    ;
-    
-        // load the score
-        if (!scoreTextures[0].generateScoreTexture(std::to_string(score[0])) || !scoreTextures[1].generateScoreTexture(std::to_string(score[1]))) {
-            SDL_Log("Failed to create texture");
         }
 
-        // Move logic
-        ball.move(playerRect, player2Rect);
-        player1.movePlayer();
-        player2.movePlayer();
+        currentState->update();
 
-        // Render Logic
+        if (changeState() == false) {
+            currentState->exit();
+            currentState = ExitState::get();
+        }
+
         SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
         SDL_RenderClear(renderer);
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        float middle = (ScreenWidth - scoreTextures[2].getWidth()) / 2.f;
-        scoreTextures[0].render(middle - 25.f, scoreTextures[2].getHeight());
-        scoreTextures[1].render(middle + 30.f, scoreTextures[2].getHeight());
-        scoreTextures[2].render(middle, scoreTextures[2].getHeight());
-        ball.render();
-        player1.render();
-        player2.render();
+        
+        currentState->render();
+
         SDL_RenderPresent(renderer);
 
-        // Frame cap
-        if (const Uint64 frameTime = SDL_GetTicksNS() - frameStart; frameTime < nsPerFrame) {
-            SDL_Delay((nsPerFrame - frameTime) / 1000000);
+        frameEnd = SDL_GetTicksNS();
+        frameTime = frameEnd - frameStart;
+
+        if (frameTime < targetFrameNs) {
+            uint64_t delayNs = targetFrameNs - frameTime;
+            SDL_DelayNS(delayNs);
         }
     }
 

@@ -1,6 +1,7 @@
 #include "../Headers/box.h"
 #include "../Headers/constants.h"
 #include "../Headers/globals.h"
+#include "../Headers/util.h"
 
 void Box::setSpawnLocation(int x, int y) {
     collisionBox.x = x;
@@ -50,59 +51,6 @@ Box::Box():
     xVelocity {0},
     yVelocity {0}
 {
-}
-
-int Box::checkCollision(SDL_Rect *a, SDL_Rect *b) {
-    // a is the ball, b is the paddles
-    const int aXMin { a->x };
-    const int aXMax { a->x + a->w };
-    const int aYMin { a->y };
-    const int aYMax { a->y + a->h };
-    const int bXMin { b->x };
-    const int bXMax { b->x + b->w };
-    const int bYMin { b->y };
-    const int bYMax { b->y + b->h };
-
-    if (aXMax <= bXMin) {
-        return 0;
-    }
-
-    if (bXMax <= aXMin) {
-        return 0;
-    }
-
-    if (aYMax <= bYMin) {
-        return 0;
-    }
-
-    if (bYMax <= aYMin) {
-        return 0;
-    }
-
-    const int yOverlap = std::min(aYMax, bYMax) - std::max(aYMin, bYMin);
-    const int xOverlap = std::min(aXMax, bXMax) - std::max(aXMin, bXMin);
-
-    if (xOverlap < yOverlap) {
-        if (aXMax > bXMax) {
-            // the ball is on the left
-            a->x += xOverlap;
-        } else {
-            // the ball is on the right
-            a->x -= xOverlap;
-        }
-        return 1;
-    }
-
-    if (yOverlap < xOverlap) {
-        if (aYMax < bYMax) {
-            a->y -= yOverlap;
-        } else {
-            a->y += yOverlap;
-        }
-        return 2;
-    }
-    
-    return 3;
 }
 
 void Box::controlPlayer(SDL_Event &event) {
@@ -214,4 +162,9 @@ void Box::reset(int x, int y) {
     setVelocity(0,0);
     setSpawnLocation(x, y);
     serveBall();
+}
+
+void Box::destroy() {
+    boxWidth = 0;
+    boxHeight = 0;
 }
