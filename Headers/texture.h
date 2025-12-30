@@ -1,15 +1,15 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
-
 #include <SDL3/SDL.h>
 #include <string>
 
 class Texture {
     public:
         Texture();
-        ~Texture() = default;
-        bool generateScoreTexture(std::string printScore);
+        ~Texture();
+        bool loadFromRenderedText(std::string textureText);
         void render(float x, float y);
+        void destroy();
         int getHeight();
         int getWidth();
     private:

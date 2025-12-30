@@ -6,3 +6,6 @@ int score[2] {0, 0};
 // int hitScale {0};
 TTF_Font* Font;
 Texture scoreTextures[3] { Texture(), Texture(), Texture()};
+GameState *currentState {nullptr};
+GameState *nextState {nullptr};
+bool running {true};

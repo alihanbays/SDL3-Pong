@@ -13,8 +13,6 @@ class Box {
         int maxVelocity {4};
         int playerSpeed {6};
         bool visible {true};
-
-        static int checkCollision(SDL_Rect *a, SDL_Rect *b);
         void controlPlayer(SDL_Event &event);
         void controlPlayer2(SDL_Event &event);
         void movePlayer();
@@ -28,6 +26,7 @@ class Box {
         void setMaxVelocity(int maxVelocity);
         void setVelocity(int newX,  int newY);
         void setScore();
+        void destroy();
     private:
         SDL_Rect collisionBox;
         int xVelocity;
