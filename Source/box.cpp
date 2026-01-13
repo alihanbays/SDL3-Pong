@@ -149,15 +149,14 @@ void Box::render() {
 
 void Box::setScore() {
     if (collisionBox.x  < 0) {
-        score[1] += 1;
+        score[1] += 1; // Player 2 scored
     } else if (collisionBox.x + collisionBox.w > ScreenWidth) {
-        score[0] += 1;
+        score[0] += 1; // Player 1 scored
     }
 }
 
 void Box::reset(int x, int y) {
     visible = true;
-    SDL_Delay(1000);
     setScore();
     setVelocity(0,0);
     setSpawnLocation(x, y);

@@ -3,10 +3,8 @@
 #include "../Headers/globals.h"
 #include "../Headers/exitState.h"
 #include "../Headers/util.h"
-
-
-
 #include "../Headers/introState.h"
+#include "../Headers/scoreState.h"
 
 PongState PongState::pongState;
 
@@ -29,7 +27,8 @@ bool PongState::enter() {
     player2.setSpawnLocation((ScreenWidth - 40), (ScreenHeight - 150) / 2);
     ball.setMaxVelocity(4);
     ball.serveBall();
-
+    delay = 1000;
+    startingFrame = 0;
     return success;
 }
 
@@ -72,14 +71,24 @@ void PongState::render() {
 }
 
 void PongState::update() {
+    if (score[0] == 10 || score[1] == 10) {
+        setNextState(ScoreState::get());
+    } 
+
     // handle the update, update the state
     int spawnX = (ScreenWidth - ball.boxWidth) / 2;
     int spawnY = (ScreenHeight - ball.boxHeight) / 2;
-    if (ball.visible == false) {
-        ball.reset(spawnX, spawnY);
+    
+    if (ball.visible == false && startingFrame == 0) {
+        startingFrame = SDL_GetTicks();
     }
 
-        // Move logic
+    if (SDL_GetTicks() - startingFrame >= delay && ball.visible == false) {
+        ball.reset(spawnX, spawnY);
+        startingFrame = 0;
+    }
+
+    // Move logic
     ball.move(player1.getCollisionBox(), player2.getCollisionBox());
     player1.movePlayer();
     player2.movePlayer();
