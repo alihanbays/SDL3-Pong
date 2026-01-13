@@ -13,6 +13,8 @@ class Box {
         int maxVelocity {4};
         int playerSpeed {6};
         bool visible {true};
+        Uint64 startingFrame;
+        Uint64 delay;
         void controlPlayer(SDL_Event &event);
         void controlPlayer2(SDL_Event &event);
         void movePlayer();

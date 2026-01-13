@@ -1,26 +1,21 @@
-#ifndef PONGSTATE_H
-#define PONGSTATE_H
-#include <SDL3/SDL.h>
+#ifndef SCORESTATE_H 
+#define SCORESTATE_H
 #include "../Headers/gameState.h"
-#include "../Headers/box.h"
 
-class PongState : public GameState {
+class ScoreState : public GameState {
     public:
-        static PongState* get();
+        static ScoreState* get();
         bool enter() override;
         bool exit() override;
         void handleEvent(SDL_Event &e) override;
         void update() override;
         void render() override;
-
     private:
-        static PongState pongState;
-        Box player1;
-        Box player2;
-        Box ball;
-        PongState();
+        static ScoreState scoreState;
+        ScoreState();
+        Texture messageTexture;
         Uint64 startingFrame;
         Uint64 delay;
 };
 
-#endif 
+#endif

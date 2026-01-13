@@ -17,6 +17,7 @@ add_executable(Pong
         Source/exitState.cpp
         Source/introState.cpp
         Source/pongState.cpp
+        Source/scoreState.cpp
 )
 
 target_link_libraries(Pong PRIVATE SDL3::SDL3 SDL3_image::SDL3_image SDL3_ttf::SDL3_ttf)
