@@ -7,6 +7,7 @@ set(CMAKE_BUILD_RPATH "/opt/homebrew/lib")
 find_package(SDL3 REQUIRED CONFIG)
 find_package(SDL3_image REQUIRED CONFIG)
 find_package(SDL3_ttf REQUIRED CONFIG)
+find_package(SDL3_mixer REQUIRED CONFIG)
 
 add_executable(Pong
         main.cpp
@@ -18,6 +19,7 @@ add_executable(Pong
         Source/introState.cpp
         Source/pongState.cpp
         Source/scoreState.cpp
+        Source/audio.cpp
 )
 
-target_link_libraries(Pong PRIVATE SDL3::SDL3 SDL3_image::SDL3_image SDL3_ttf::SDL3_ttf)
+target_link_libraries(Pong PRIVATE SDL3::SDL3 SDL3_image::SDL3_image SDL3_ttf::SDL3_ttf SDL3_mixer::SDL3_mixer)

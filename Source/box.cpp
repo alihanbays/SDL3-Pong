@@ -2,6 +2,7 @@
 #include "../Headers/constants.h"
 #include "../Headers/globals.h"
 #include "../Headers/util.h"
+#include "../Headers/audio.h"
 
 void Box::setSpawnLocation(int x, int y) {
     collisionBox.x = x;
@@ -108,6 +109,11 @@ void Box::move(SDL_Rect *collider1, SDL_Rect *collider2) {
     }
 
     if (collisionBox.y < 0 || collisionBox.y + collisionBox.h > ScreenHeight) {
+        if (visible == true) {
+            // Play wall bounce
+            audioPlay(3);
+        }
+
         yVelocity = yVelocity * -1;
     }
 
@@ -115,6 +121,8 @@ void Box::move(SDL_Rect *collider1, SDL_Rect *collider2) {
     const int res2 = checkCollision(&collisionBox, collider2);
 
     if (res == 1) {
+        // Play Boing for collider 1
+        audioPlay(0);
         xVelocity = xVelocity * -1;
         // int scaled = abs(hitScale) / 19; // scale from -76..76 to -4..4
         // if (yVelocity < 0) {
@@ -123,10 +131,20 @@ void Box::move(SDL_Rect *collider1, SDL_Rect *collider2) {
         int newX = xVelocity + 1;
         if (newX > 10) newX = 10;
         setVelocity(newX, yVelocity);
+        
+
     }
-    else if (res == 2) yVelocity = yVelocity * -1;
+    else if (res == 2) {
+        // Play wall bounce
+        audioPlay(2);
+        yVelocity = yVelocity * -1;
+
+    }
 
     if (res2 == 1) {
+        // Play Boing for collider 2
+        audioPlay(1);
+
         xVelocity = xVelocity * -1;
         // int scaled = abs(hitScale) / 19; // scale from -76..76 to -4..4
         // if (yVelocity < 0) {
@@ -136,7 +154,11 @@ void Box::move(SDL_Rect *collider1, SDL_Rect *collider2) {
         if (newX < -10) newX = -10;
         setVelocity(newX, yVelocity);
     }
-    else if (res2 == 2) yVelocity = yVelocity * -1;
+    else if (res2 == 2) {
+        // Play wall bounce
+        audioPlay(3);
+        yVelocity = yVelocity * -1;
+    }
 
     collisionBox.x += xVelocity;
     collisionBox.y += yVelocity;
