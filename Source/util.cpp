@@ -3,8 +3,10 @@
 #include "../Headers/constants.h"
 #include "../Headers/gameState.h"
 #include "../Headers/exitState.h"
+#include "../Headers/audio.h"
 #include <SDL3/SDL.h>
 #include <string>
+#include <SDL3_ttf/SDL_ttf.h>
 
 
 void close() {
@@ -12,6 +14,7 @@ void close() {
     for (int i = 0; i < 3; i ++) {
         scoreTextures[i].destroy();
     }
+    audioCleanup();
     SDL_DestroyRenderer(renderer);
     renderer = nullptr;
     SDL_DestroyWindow(window);
@@ -38,12 +41,18 @@ bool init() {
     }
     
     // Initilize Font
-    std::string fontPath{ "../Assets/font.ttf" };
+    std::string fontPath{"Assets/font.ttf"};
     Font = TTF_OpenFont( fontPath.c_str(), 28 );
 
     if (Font == nullptr) {
         SDL_Log("generateScoreTexture: Font is null");
+        printf("TTF_OpenFont: %s\n", SDL_GetError());
         return false;
+    }
+
+    if (!audioInit()) {
+        SDL_Log("Failed to initilize audio");
+        //return false;
     }
 
     // Initilize Scoreboard
