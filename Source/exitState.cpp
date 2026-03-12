@@ -15,7 +15,7 @@ bool ExitState::enter() {
     
     bool success {true};
     
-    if (messageTexture.loadFromRenderedText("Exiting...") == false) {
+    if (messageTexture.loadFromRenderedText("Exiting...", Font28) == false) {
         SDL_Log("Failed to create intro message");
         success = false;
     }

@@ -22,10 +22,10 @@ void Texture::destroy() {
     height = 0;
 }
 
-bool Texture::loadFromRenderedText(std::string printScore) {
+bool Texture::loadFromRenderedText(std::string printScore, TTF_Font* font) {
     destroy();
     SDL_Color textColor = { 255, 255, 255, 255 };
-    SDL_Surface *surface = TTF_RenderText_Blended(Font, printScore.c_str(), printScore.size(), textColor);
+    SDL_Surface *surface = TTF_RenderText_Blended(font, printScore.c_str(), printScore.size(), textColor);
 
     if (surface == nullptr) {
         SDL_Log("loadFromRenderedText: surface is null");

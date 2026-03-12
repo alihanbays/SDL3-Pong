@@ -17,12 +17,12 @@ bool ScoreState::enter() {
     bool success {true};
 
     if (score[1] == 10) {
-        if (messageTexture.loadFromRenderedText("Player 2 Win!") == false) {
+        if (messageTexture.loadFromRenderedText("Player 2 Win!", Font28) == false) {
             SDL_Log("Failed to create score message");
             success = false;
         }
     } else {
-        if (messageTexture.loadFromRenderedText("Player 1 Win!") == false) {
+        if (messageTexture.loadFromRenderedText("Player 1 Win!", Font28) == false) {
             SDL_Log("Failed to create score message");
             success = false;
         }

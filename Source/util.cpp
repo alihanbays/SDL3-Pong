@@ -42,9 +42,16 @@ bool init() {
     
     // Initilize Font
     std::string fontPath{"Assets/font.ttf"};
-    Font = TTF_OpenFont( fontPath.c_str(), 28 );
+    Font28 = TTF_OpenFont( fontPath.c_str(), 28 );
+    Font14 = TTF_OpenFont( fontPath.c_str(), 22 );
 
-    if (Font == nullptr) {
+    if (Font28 == nullptr) {
+        SDL_Log("generateScoreTexture: Font is null");
+        printf("TTF_OpenFont: %s\n", SDL_GetError());
+        return false;
+    }
+
+    if (Font14 == nullptr) {
         SDL_Log("generateScoreTexture: Font is null");
         printf("TTF_OpenFont: %s\n", SDL_GetError());
         return false;
@@ -56,9 +63,9 @@ bool init() {
     }
 
     // Initilize Scoreboard
-    scoreTextures[0].loadFromRenderedText(std::to_string(score[0]));
-    scoreTextures[1].loadFromRenderedText(std::to_string(score[1]));
-    scoreTextures[2].loadFromRenderedText(":");
+    scoreTextures[0].loadFromRenderedText(std::to_string(score[0]), Font28);
+    scoreTextures[1].loadFromRenderedText(std::to_string(score[1]), Font28);
+    scoreTextures[2].loadFromRenderedText(":", Font28);
 
 
     return success;

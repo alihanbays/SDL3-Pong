@@ -55,7 +55,7 @@ void PongState::handleEvent(SDL_Event &e) {
 void PongState::render() {
     // Handle the rendering of this state
     // load the score
-    if (!scoreTextures[0].loadFromRenderedText(std::to_string(score[0])) || !scoreTextures[1].loadFromRenderedText(std::to_string(score[1]))) {
+    if (!scoreTextures[0].loadFromRenderedText(std::to_string(score[0]), Font28) || !scoreTextures[1].loadFromRenderedText(std::to_string(score[1]), Font28)) {
         SDL_Log("Failed to create texture");
     }
 

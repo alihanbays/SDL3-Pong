@@ -3,6 +3,7 @@
 #include "../Headers/globals.h"
 #include "../Headers/constants.h"
 #include "../Headers/pongState.h"
+#include "../Headers/menuState.h"
 
 IntroState IntroState::introState;
 
@@ -17,7 +18,7 @@ bool IntroState::enter() {
 
     bool success {true};
     
-    if (messageTexture.loadFromRenderedText("Alihan Baysal presents...") == false) {
+    if (messageTexture.loadFromRenderedText("Alihan Baysal presents...", Font28) == false) {
         SDL_Log("Failed to create intro message");
         success = false;
     }
@@ -38,7 +39,7 @@ void IntroState::handleEvent(SDL_Event &e) {
     // Handle the events that needs to happen. For this I will not have any events or just skip the intro with return key
 
     if (e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_RETURN) {
-        setNextState(PongState::get());
+        setNextState(MenuState::get());
     }
     
 }
@@ -49,6 +50,6 @@ void IntroState::render() {
 
 void IntroState::update() {
     if (SDL_GetTicks() - startingFrame >= delay) {
-        setNextState(PongState::get());
+        setNextState(MenuState::get());
     }
 }
