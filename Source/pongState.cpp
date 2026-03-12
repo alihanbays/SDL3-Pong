@@ -29,6 +29,7 @@ bool PongState::enter() {
     ball.serveBall();
     delay = 1000;
     startingFrame = 0;
+
     return success;
 }
 
@@ -42,8 +43,8 @@ bool PongState::exit() {
 
 void PongState::handleEvent(SDL_Event &e) {
     // Handle the events that needs to happen. For this I will not have any events or just skip the intro with return key
-    player1.controlPlayer2(e);
-    player2.controlPlayer(e);
+    player1.controlPlayer(e);
+    if (!singleplayer) player2.controlPlayer2(e);
     
 
     if (e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_ESCAPE) {
@@ -91,6 +92,6 @@ void PongState::update() {
     // Move logic
     ball.move(player1.getCollisionBox(), player2.getCollisionBox());
     player1.movePlayer();
-    player2.movePlayer();
+    if (!singleplayer) player2.movePlayer();
+    else player2.AImove(ball);
 }
-

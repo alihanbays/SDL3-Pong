@@ -18,6 +18,7 @@ class Box {
         void controlPlayer(SDL_Event &event);
         void controlPlayer2(SDL_Event &event);
         void movePlayer();
+        void AImove(Box& ball);
         void move(SDL_Rect *collider1, SDL_Rect *collider2);
         void render();
         void reset(int x, int y);

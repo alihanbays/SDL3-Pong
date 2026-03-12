@@ -57,6 +57,25 @@ Box::Box():
 void Box::controlPlayer(SDL_Event &event) {
     if (event.type == SDL_EVENT_KEY_DOWN && event.key.repeat == 0) {
         switch (event.key.key) {
+            case SDLK_W: yVelocity -= playerSpeed; break;
+            case SDLK_S: yVelocity += playerSpeed; break;
+            default: break;
+        }
+    }
+
+    if (event.type == SDL_EVENT_KEY_UP && event.key.repeat == 0) {
+        switch (event.key.key) {
+            case SDLK_W: yVelocity += playerSpeed; break;
+            case SDLK_S: yVelocity -= playerSpeed; break;
+            default: break;
+        }
+    }
+
+}
+
+void Box::controlPlayer2(SDL_Event &event) {
+    if (event.type == SDL_EVENT_KEY_DOWN && event.key.repeat == 0) {
+        switch (event.key.key) {
             case SDLK_UP: yVelocity -= playerSpeed; break;
             case SDLK_DOWN: yVelocity += playerSpeed; break;
             default: break;
@@ -72,35 +91,33 @@ void Box::controlPlayer(SDL_Event &event) {
     }
 }
 
-void Box::controlPlayer2(SDL_Event &event) {
-    if (event.type == SDL_EVENT_KEY_DOWN && event.key.repeat == 0) {
-        switch (event.key.key) {
-            case SDLK_W: yVelocity -= playerSpeed; break;
-            case SDLK_S: yVelocity += playerSpeed; break;
-            default: break;
-        }
-    }
-
-    if (event.type == SDL_EVENT_KEY_UP && event.key.repeat == 0) {
-        switch (event.key.key) {
-            case SDLK_W: yVelocity += playerSpeed; break;
-            case SDLK_S: yVelocity -= playerSpeed; break;
-            default: break;
-        }
-    }
-}
-
 void Box::movePlayer() {
-    collisionBox.x += xVelocity;
     collisionBox.y += yVelocity;
 
-    if ((collisionBox.x < 0) || collisionBox.x + collisionBox.w > ScreenWidth) {
-        collisionBox.x -= xVelocity;
-    }
-
+    
     if (collisionBox.y < 0 || collisionBox.y + collisionBox.h > ScreenHeight) {
         collisionBox.y -= yVelocity;
     }
+}
+
+void Box::AImove(Box& ball) {
+    // Get balls current y position
+    SDL_Rect* rect = ball.getCollisionBox();
+    if (collisionBox.y > rect->y + 25) {
+        yVelocity += playerSpeed;
+        if (yVelocity > 6) yVelocity = 6;
+    } else if (collisionBox.y < rect->y - 25) {
+        yVelocity -= playerSpeed;
+        if (yVelocity < -6) yVelocity = -6;
+    } else {
+        yVelocity = 0;
+    }
+
+    
+    collisionBox.y -= yVelocity;
+
+    if (collisionBox.y < 0) collisionBox.y -= yVelocity;
+    else if (collisionBox.y + collisionBox.h > ScreenHeight) collisionBox.y = ScreenHeight - collisionBox.h;
 }
 
 void Box::move(SDL_Rect *collider1, SDL_Rect *collider2) {
