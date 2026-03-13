@@ -1,3 +1,5 @@
+I published a web build of this project: https://alihanbays.itch.io/sdl3-pong-demo
+
 ![Gameplay](Assets/gameplay.gif)
 
 # SDL3 Pong
