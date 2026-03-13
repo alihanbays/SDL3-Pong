@@ -1,6 +1,6 @@
 #include "../Headers/scoreState.h"
 #include "../Headers/texture.h"
-#include "../Headers/exitState.h"
+#include "../Headers/menuState.h"
 #include "../Headers/util.h"
 #include "../Headers/constants.h"
 #include "../Headers/globals.h"
@@ -16,7 +16,7 @@ ScoreState* ScoreState::get() {
 bool ScoreState::enter() {
     bool success {true};
 
-    if (score[1] == 10) {
+    if (score[1] == 5) {
         if (messageTexture.loadFromRenderedText("Player 2 Win!", Font28) == false) {
             SDL_Log("Failed to create score message");
             success = false;
@@ -41,7 +41,7 @@ bool ScoreState::exit() {
 
 void ScoreState::handleEvent(SDL_Event &e) {
     if (e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_RETURN) {
-        setNextState(ExitState::get());
+        setNextState(MenuState::get());
     }
 }
 
@@ -52,7 +52,7 @@ void ScoreState::render() {
 void ScoreState::update() {
     if (SDL_GetTicks() - startingFrame >= delay) {
         delay = 0;
-        setNextState(ExitState::get());
+        setNextState(MenuState::get());
     }
 }
 

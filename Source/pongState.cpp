@@ -1,23 +1,28 @@
 #include "../Headers/pongState.h"
 #include "../Headers/constants.h"
-#include "../Headers/globals.h"
 #include "../Headers/exitState.h"
-#include "../Headers/util.h"
+#include "../Headers/globals.h"
 #include "../Headers/introState.h"
 #include "../Headers/scoreState.h"
+#include "../Headers/util.h"
 
 PongState PongState::pongState;
 
-PongState::PongState() {}
+PongState::PongState()
+{
+}
 
-PongState* PongState::get() {
+PongState *PongState::get()
+{
     return &pongState;
 }
 
-bool PongState::enter() {
+bool PongState::enter()
+{
     // Set what will happen when we enter this stage, load texts and pictures
-    bool success {true};
-    
+    bool success{true};
+    score[0] = 0;
+    score[1] = 0;
     int spawnX = (ScreenWidth - ball.boxWidth) / 2;
     int spawnY = (ScreenHeight - ball.boxHeight) / 2;
     ball.setSpawnLocation(spawnX, spawnY);
@@ -33,7 +38,8 @@ bool PongState::enter() {
     return success;
 }
 
-bool PongState::exit() {
+bool PongState::exit()
+{
     // Determine what happens when we exit this stage, unload textures etc..
     player1.destroy();
     player2.destroy();
@@ -41,22 +47,29 @@ bool PongState::exit() {
     return true;
 }
 
-void PongState::handleEvent(SDL_Event &e) {
-    // Handle the events that needs to happen. For this I will not have any events or just skip the intro with return key
+void PongState::handleEvent(SDL_Event &e)
+{
+    // Handle the events that needs to happen. For this I will not have any
+    // events or just skip the intro with return key
     player1.controlPlayer(e);
-    if (!singleplayer) player2.controlPlayer2(e);
-    
+    if (!singleplayer)
+    {
+        player2.controlPlayer2(e);
+    }
 
-    if (e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_ESCAPE) {
-        SDL_Log("Escape has been pressed");
+    if (e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_ESCAPE)
+    {
         setNextState(ExitState::get());
     }
 }
 
-void PongState::render() {
+void PongState::render()
+{
     // Handle the rendering of this state
     // load the score
-    if (!scoreTextures[0].loadFromRenderedText(std::to_string(score[0]), Font28) || !scoreTextures[1].loadFromRenderedText(std::to_string(score[1]), Font28)) {
+    if (!scoreTextures[0].loadFromRenderedText(std::to_string(score[0]), Font28) ||
+        !scoreTextures[1].loadFromRenderedText(std::to_string(score[1]), Font28))
+    {
         SDL_Log("Failed to create texture");
     }
 
@@ -71,20 +84,24 @@ void PongState::render() {
     player2.render();
 }
 
-void PongState::update() {
-    if (score[0] == 10 || score[1] == 10) {
+void PongState::update()
+{
+    if (score[0] == 5 || score[1] == 5)
+    {
         setNextState(ScoreState::get());
-    } 
+    }
 
     // handle the update, update the state
     int spawnX = (ScreenWidth - ball.boxWidth) / 2;
     int spawnY = (ScreenHeight - ball.boxHeight) / 2;
-    
-    if (ball.visible == false && startingFrame == 0) {
+
+    if (ball.visible == false && startingFrame == 0)
+    {
         startingFrame = SDL_GetTicks();
     }
 
-    if (SDL_GetTicks() - startingFrame >= delay && ball.visible == false) {
+    if (SDL_GetTicks() - startingFrame >= delay && ball.visible == false)
+    {
         ball.reset(spawnX, spawnY);
         startingFrame = 0;
     }
@@ -92,6 +109,12 @@ void PongState::update() {
     // Move logic
     ball.move(player1.getCollisionBox(), player2.getCollisionBox());
     player1.movePlayer();
-    if (!singleplayer) player2.movePlayer();
-    else player2.AImove(ball);
+    if (!singleplayer)
+    {
+        player2.movePlayer();
+    }
+    else
+    {
+        player2.AImove(ball);
+    }
 }

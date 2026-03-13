@@ -17,6 +17,8 @@ extern GameState *currentState;
 extern GameState *nextState;
 extern bool running;
 extern bool singleplayer;
-
+extern uint64_t frameStart;
+extern uint64_t frameEnd;
+extern uint64_t frameTime;
 
 #endif
