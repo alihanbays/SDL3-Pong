@@ -1,3 +1,5 @@
+![Gameplay](Assets/gameplay.gif)
+
 # SDL3 Pong
 
 A Pong clone built from scratch with C++ and SDL3.
