@@ -2,7 +2,6 @@
 #include "../Headers/audio.h"
 #include "../Headers/constants.h"
 #include "../Headers/exitState.h"
-#include "../Headers/gameState.h"
 #include "../Headers/globals.h"
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
