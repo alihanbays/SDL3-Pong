@@ -47,4 +47,5 @@
 *snake.c
 *.idea/
 *build/
+*build-web/
 .clang-format
