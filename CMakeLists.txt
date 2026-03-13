@@ -20,6 +20,7 @@ add_executable(Pong
         Source/pongState.cpp
         Source/scoreState.cpp
         Source/audio.cpp
+        Source/menuState.cpp
 )
 
 target_link_libraries(Pong PRIVATE SDL3::SDL3 SDL3_image::SDL3_image SDL3_ttf::SDL3_ttf SDL3_mixer::SDL3_mixer)

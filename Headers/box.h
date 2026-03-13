@@ -4,35 +4,38 @@
 #include <SDL3/SDL.h>
 #include <sstream>
 
-class Box {
-    public:
-        Box();
-        ~Box() = default;
-        int boxWidth = 20;
-        int boxHeight = 20;
-        int maxVelocity {4};
-        int playerSpeed {6};
-        bool visible {true};
-        Uint64 startingFrame;
-        Uint64 delay;
-        void controlPlayer(SDL_Event &event);
-        void controlPlayer2(SDL_Event &event);
-        void movePlayer();
-        void move(SDL_Rect *collider1, SDL_Rect *collider2);
-        void render();
-        void reset(int x, int y);
-        void setSpawnLocation(int x, int y);
-        void setSize(int width, int height);
-        void serveBall();
-        SDL_Rect* getCollisionBox();
-        void setMaxVelocity(int maxVelocity);
-        void setVelocity(int newX,  int newY);
-        void setScore();
-        void destroy();
-    private:
-        SDL_Rect collisionBox;
-        int xVelocity;
-        int yVelocity;
+class Box
+{
+  public:
+    Box();
+    ~Box() = default;
+    int boxWidth = 20;
+    int boxHeight = 20;
+    int maxVelocity{4};
+    int playerSpeed{6};
+    bool visible{true};
+    Uint64 startingFrame;
+    Uint64 delay;
+    void controlPlayer(SDL_Event &event);
+    void controlPlayer2(SDL_Event &event);
+    void movePlayer();
+    void AImove(Box &ball);
+    void move(SDL_Rect *collider1, SDL_Rect *collider2);
+    void render();
+    void reset(int x, int y);
+    void setSpawnLocation(int x, int y);
+    void setSize(int width, int height);
+    void serveBall();
+    SDL_Rect *getCollisionBox();
+    void setMaxVelocity(int maxVelocity);
+    void setVelocity(int newX, int newY);
+    void setScore();
+    void destroy();
+
+  private:
+    SDL_Rect collisionBox;
+    int xVelocity;
+    int yVelocity;
 };
 
 #endif

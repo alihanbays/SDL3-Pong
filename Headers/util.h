@@ -6,7 +6,7 @@
 void close();
 bool init();
 int checkCollision(SDL_Rect *a, SDL_Rect *b);
-void setNextState(GameState* state);
+void setNextState(GameState *state);
 bool changeState();
 
 #endif
